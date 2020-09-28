@@ -20,102 +20,176 @@ pub enum ByteOrder {
     LSBFirst,
 }
 
-pub(crate) trait Collect<T> { fn collect(&self, data: &[u8]) -> T; }
+impl ByteOrder {
+    fn encode<T>(&self, data: T, dest: &mut [u8]) where Self: Encoding<T> {
+        <Self as Encoding<T>>::encode(self, data, dest);
+    }
+    fn decode<T>(&self, data: &[u8]) -> T where Self: Encoding<T> {
+        <Self as Encoding<T>>::decode(self, data)
+    }
+}
 
-impl Collect<u8> for ByteOrder {
-    fn collect(&self, data: &[u8]) -> u8 {
+pub(crate) trait Encoding<T> {
+    fn encode(&self, data: T, dest: &mut [u8]);
+    fn decode(&self, data: &[u8]) -> T;
+}
+
+impl Encoding<u8> for ByteOrder {
+    fn encode(&self, data: u8, dest: &mut [u8]) {
+        assert_eq!(dest.len(), 1);
+        dest[0] = data;
+    }
+
+    fn decode(&self, data: &[u8]) -> u8 {
         assert_eq!(data.len(), 1);
         data[0]
     }
 }
 
-impl Collect<u16> for ByteOrder {
-    fn collect(&self, data: &[u8]) -> u16 {
+impl Encoding<u16> for ByteOrder {
+    fn encode(&self, data: u16, dest: &mut [u8]) {
+        assert_eq!(dest.len(), 2);
+        match self {
+            ByteOrder::MSBFirst => {
+                dest[0] = (data >> 8 & 255) as u8;
+                dest[1] = (data >> 0 & 255) as u8;
+            }
+            ByteOrder::LSBFirst => {
+                dest[0] = (data >> 0 & 255) as u8;
+                dest[1] = (data >> 8 & 255) as u8;
+            }
+        }
+    }
+
+    fn decode(&self, data: &[u8]) -> u16 {
         assert_eq!(data.len(), 2);
-        let mut result = 0;
         match self {
             ByteOrder::MSBFirst => {
-                for &d in data {
-                    result <<= 8;
-                    result |= d as u16;
-                }
+                (data[0] as u16) << 8 |
+                    (data[1] as u16) << 0
             }
             ByteOrder::LSBFirst => {
-                for i in 0..data.len() {
-                    result |= (data[i] as u16) << i * 8;
-                }
+                (data[1] as u16) << 8 |
+                    (data[0] as u16)
             }
         }
-        result
     }
 }
 
-impl Collect<u32> for ByteOrder {
-    fn collect(&self, data: &[u8]) -> u32 {
+impl Encoding<u32> for ByteOrder {
+    fn encode(&self, data: u32, dest: &mut [u8]) {
+        assert_eq!(dest.len(), 4);
+        match self {
+            ByteOrder::MSBFirst => {
+                dest[0] = (data >> 24 & 255) as u8;
+                dest[1] = (data >> 16 & 255) as u8;
+                dest[2] = (data >> 08 & 255) as u8;
+                dest[3] = (data >> 00 & 255) as u8;
+            }
+            ByteOrder::LSBFirst => {
+                dest[0] = (data >> 00 & 255) as u8;
+                dest[1] = (data >> 08 & 255) as u8;
+                dest[2] = (data >> 16 & 255) as u8;
+                dest[3] = (data >> 24 & 255) as u8;
+            }
+        }
+    }
+
+    fn decode(&self, data: &[u8]) -> u32 {
         assert_eq!(data.len(), 4);
-        let mut result = 0;
         match self {
             ByteOrder::MSBFirst => {
-                for &d in data {
-                    result <<= 8;
-                    result |= d as u32;
-                }
+                (data[0] as u32) << 24 |
+                    (data[1] as u32) << 16 |
+                    (data[2] as u32) << 8 |
+                    (data[3] as u32) << 0
             }
             ByteOrder::LSBFirst => {
-                for i in 0..data.len() {
-                    result |= (data[i] as u32) << i * 8;
-                }
+                (data[0] as u32) << 00 |
+                    (data[1] as u32) << 08 |
+                    (data[2] as u32) << 16 |
+                    (data[3] as u32) << 24
             }
         }
-        result
     }
 }
 
-impl Collect<i8> for ByteOrder {
-    fn collect(&self, data: &[u8]) -> i8 {
+impl Encoding<i8> for ByteOrder {
+    fn encode(&self, data: i8, dest: &mut [u8]) {
+        assert_eq!(dest.len(), 1);
+        dest[0] = data as u8;
+    }
+
+    fn decode(&self, data: &[u8]) -> i8 {
         assert_eq!(data.len(), 1);
         data[0] as i8
     }
 }
 
-impl Collect<i16> for ByteOrder {
-    fn collect(&self, data: &[u8]) -> i16 {
-        assert_eq!(data.len(), 2);
-        let mut result = 0;
+impl Encoding<i16> for ByteOrder {
+    fn encode(&self, data: i16, dest: &mut [u8]) {
+        assert_eq!(dest.len(), 2);
         match self {
             ByteOrder::MSBFirst => {
-                for &d in data {
-                    result <<= 8;
-                    result |= d as i16;
-                }
+                dest[0] = (data >> 8 & 255) as u8;
+                dest[1] = (data >> 0 & 255) as u8;
             }
             ByteOrder::LSBFirst => {
-                for i in 0..data.len() {
-                    result |= (data[i] as i16) << i * 8;
-                }
+                dest[0] = (data >> 0 & 255) as u8;
+                dest[1] = (data >> 8 & 255) as u8;
             }
         }
-        result
+    }
+
+    fn decode(&self, data: &[u8]) -> i16 {
+        assert_eq!(data.len(), 2);
+        match self {
+            ByteOrder::MSBFirst => {
+                (data[0] as i16) << 8 |
+                    (data[1] as i16) << 0
+            }
+            ByteOrder::LSBFirst => {
+                (data[1] as i16) << 8 |
+                    (data[0] as i16)
+            }
+        }
     }
 }
 
-impl Collect<i32> for ByteOrder {
-    fn collect(&self, data: &[u8]) -> i32 {
-        assert_eq!(data.len(), 4);
-        let mut result = 0;
+impl Encoding<i32> for ByteOrder {
+    fn encode(&self, data: i32, dest: &mut [u8]) {
+        assert_eq!(dest.len(), 4);
         match self {
             ByteOrder::MSBFirst => {
-                for &d in data {
-                    result <<= 8;
-                    result |= d as i32;
-                }
+                dest[0] = (data >> 24 & 255) as u8;
+                dest[1] = (data >> 16 & 255) as u8;
+                dest[2] = (data >> 08 & 255) as u8;
+                dest[3] = (data >> 00 & 255) as u8;
             }
             ByteOrder::LSBFirst => {
-                for i in 0..data.len() {
-                    result |= (data[i] as i32) << i * 8;
-                }
+                dest[0] = (data >> 00 & 255) as u8;
+                dest[1] = (data >> 08 & 255) as u8;
+                dest[2] = (data >> 16 & 255) as u8;
+                dest[3] = (data >> 24 & 255) as u8;
             }
         }
-        result
+    }
+
+    fn decode(&self, data: &[u8]) -> i32 {
+        assert_eq!(data.len(), 4);
+        match self {
+            ByteOrder::MSBFirst => {
+                (data[0] as i32) << 24 |
+                    (data[1] as i32) << 16 |
+                    (data[2] as i32) << 8 |
+                    (data[3] as i32) << 0
+            }
+            ByteOrder::LSBFirst => {
+                (data[0] as i32) << 00 |
+                    (data[1] as i32) << 08 |
+                    (data[2] as i32) << 16 |
+                    (data[3] as i32) << 24
+            }
+        }
     }
 }

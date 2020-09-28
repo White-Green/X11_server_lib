@@ -1,7 +1,7 @@
 use std::io::Read;
 
 use crate::{Error, Result};
-use crate::read_util::{ByteOrder, Collect, read_specified_length};
+use crate::read_util::{ByteOrder, Encoding, read_specified_length};
 
 mod test;
 
@@ -21,10 +21,10 @@ pub fn read_setup(stream: &mut impl Read, buffer: &mut [u8]) -> Result<(ByteOrde
         _ => { return Err(Error::InvalidValue("byte order")); }
     };
     read_specified_length(stream, buffer, 10)?;
-    let protocol_major_version = order.collect(&buffer[0..2]);
-    let protocol_minor_version = order.collect(&buffer[2..4]);
-    let authorization_protocol_name_length: u16 = order.collect(&buffer[4..6]);
-    let authorization_protocol_data_length: u16 = order.collect(&buffer[6..8]);
+    let protocol_major_version = order.decode(&buffer[0..2]);
+    let protocol_minor_version = order.decode(&buffer[2..4]);
+    let authorization_protocol_name_length: u16 = order.decode(&buffer[4..6]);
+    let authorization_protocol_data_length: u16 = order.decode(&buffer[6..8]);
     let name_length = authorization_protocol_name_length as usize;
     let data_length = authorization_protocol_data_length as usize;
 
