@@ -2,15 +2,19 @@ use std::io::Read;
 
 use crate::{Error, Result};
 
-pub(crate) fn read_specified_length(stream: &mut impl Read, buffer: &mut [u8], mut length: usize) -> Result<()> {
+mod test;
+
+pub(crate) fn read_specified_length(stream: &mut impl Read, buffer: &mut [u8], length: usize) -> Result<()> {
     let mut read_length = 0;
     while read_length < length {
-        read_length += stream.read(&mut buffer[read_length..length]).map_err(|e| Error::IoError(e))?;
+        let i = stream.read(&mut buffer[read_length..length])
+            .map_err(|e| Error::IoError(e))?;
+        read_length += i;
     }
     Ok(())
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ByteOrder {
     MSBFirst,
     LSBFirst,

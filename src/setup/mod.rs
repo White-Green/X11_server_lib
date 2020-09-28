@@ -3,7 +3,9 @@ use std::io::Read;
 use crate::{Error, Result};
 use crate::read_util::{ByteOrder, Collect, read_specified_length};
 
-#[derive(Debug, Clone)]
+mod test;
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct ConnectionSetupInformation {
     protocol_major_version: u16,
     protocol_minor_version: u16,
