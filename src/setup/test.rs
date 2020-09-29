@@ -2,11 +2,11 @@ use crate::read_util::ByteOrder::{LSBFirst, MSBFirst};
 use crate::setup::{ConnectionSetupInformation, read_setup, write_setup};
 
 #[test]
-fn read_setup_test() {
+fn read_setup_test() -> Result<(), ()> {
     let input = vec![0o102, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0];
     assert_eq!(
-        read_setup(&mut &input[..], &mut [0; 1024]).map_err(|_| ()),
-        Ok((
+        read_setup(&mut &input[..], &mut [0; 1024]).map_err(|_| ())?,
+        ((
             MSBFirst,
             ConnectionSetupInformation {
                 protocol_major_version: 11,
@@ -17,8 +17,8 @@ fn read_setup_test() {
 
     let input = vec![0o154, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     assert_eq!(
-        read_setup(&mut &input[..], &mut [0; 1024]).map_err(|_| ()),
-        Ok((
+        read_setup(&mut &input[..], &mut [0; 1024]).map_err(|_| ())?,
+        ((
             LSBFirst,
             ConnectionSetupInformation {
                 protocol_major_version: 11,
@@ -28,6 +28,7 @@ fn read_setup_test() {
             })));
 
     //TODO: authテストケース追加
+    Ok(())
 }
 
 #[test]
@@ -40,7 +41,7 @@ fn write_setup_test() -> Result<(), ()> {
     };
     let mut stream = [0; 1024];
     let mut buffer = [0; 1024];
-    write_setup(&mut &mut stream[..], &mut buffer[..], &MSBFirst, input).map_err(|_|())?;
+    write_setup(&mut &mut stream[..], &mut buffer[..], &MSBFirst, input).map_err(|_| ())?;
     assert_eq!(&stream[..12], &[0o102, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0]);
 
     let input = ConnectionSetupInformation {
@@ -49,7 +50,7 @@ fn write_setup_test() -> Result<(), ()> {
         authorization_protocol_name: String::new(),
         authorization_protocol_data: String::new(),
     };
-    write_setup(&mut &mut stream[..], &mut buffer[..], &LSBFirst, input).map_err(|_|())?;
+    write_setup(&mut &mut stream[..], &mut buffer[..], &LSBFirst, input).map_err(|_| ())?;
     assert_eq!(&stream[..12], &[0o154, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     Ok(())
 }

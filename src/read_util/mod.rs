@@ -4,14 +4,15 @@ use crate::{Error, Result};
 
 mod test;
 
-pub(crate) fn read_specified_length(stream: &mut impl Read, buffer: &mut [u8], length: usize) -> Result<()> {
+pub(crate) fn read_specified_length(stream: &mut impl Read, buffer: &mut [u8], length: usize) -> Result<usize> {
+    let length = length.min(buffer.len());
     let mut read_length = 0;
     while read_length < length {
         let i = stream.read(&mut buffer[read_length..length])
             .map_err(|e| Error::IoError(e))?;
         read_length += i;
     }
-    Ok(())
+    Ok(length)
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -21,49 +22,49 @@ pub enum ByteOrder {
 }
 
 impl ByteOrder {
-    pub fn encode<T>(&self, data: T, dest: &mut [u8]) where Self: Encoding<T> {
-        <Self as Encoding<T>>::encode(self, data, dest);
+    pub fn encode<T>(&self, data: T, dest: &mut [u8]) where T: Encoding {
+        data.encode(self, dest);
     }
-    pub fn decode<T>(&self, data: &[u8]) -> T where Self: Encoding<T> {
-        <Self as Encoding<T>>::decode(self, data)
+    pub fn decode<T>(&self, data: &[u8]) -> T where T: Encoding {
+        T::decode(self, data)
     }
 }
 
-pub trait Encoding<T> {
-    fn encode(&self, data: T, dest: &mut [u8]);
-    fn decode(&self, data: &[u8]) -> T;
+pub trait Encoding {
+    fn encode(&self, order: &ByteOrder, dest: &mut [u8]);
+    fn decode(order: &ByteOrder, data: &[u8]) -> Self;
 }
 
-impl Encoding<u8> for ByteOrder {
-    fn encode(&self, data: u8, dest: &mut [u8]) {
-        assert_eq!(dest.len(), 1);
-        dest[0] = data;
+impl Encoding for u8 {
+    fn encode(&self, _order: &ByteOrder, dest: &mut [u8]) {
+        assert!(dest.len() >= 1);
+        dest[0] = *self;
     }
 
-    fn decode(&self, data: &[u8]) -> u8 {
-        assert_eq!(data.len(), 1);
+    fn decode(_order: &ByteOrder, data: &[u8]) -> Self {
+        assert!(data.len() >= 1);
         data[0]
     }
 }
 
-impl Encoding<u16> for ByteOrder {
-    fn encode(&self, data: u16, dest: &mut [u8]) {
-        assert_eq!(dest.len(), 2);
-        match self {
+impl Encoding for u16 {
+    fn encode(&self, order: &ByteOrder, dest: &mut [u8]) {
+        assert!(dest.len() >= 2);
+        match order {
             ByteOrder::MSBFirst => {
-                dest[0] = (data >> 8 & 255) as u8;
-                dest[1] = (data >> 0 & 255) as u8;
+                dest[0] = (self >> 8 & 255) as u8;
+                dest[1] = (self >> 0 & 255) as u8;
             }
             ByteOrder::LSBFirst => {
-                dest[0] = (data >> 0 & 255) as u8;
-                dest[1] = (data >> 8 & 255) as u8;
+                dest[0] = (self >> 0 & 255) as u8;
+                dest[1] = (self >> 8 & 255) as u8;
             }
         }
     }
 
-    fn decode(&self, data: &[u8]) -> u16 {
-        assert_eq!(data.len(), 2);
-        match self {
+    fn decode(order: &ByteOrder, data: &[u8]) -> Self {
+        assert!(data.len() >= 2);
+        match order {
             ByteOrder::MSBFirst => {
                 (data[0] as u16) << 8 |
                     (data[1] as u16) << 0
@@ -76,28 +77,28 @@ impl Encoding<u16> for ByteOrder {
     }
 }
 
-impl Encoding<u32> for ByteOrder {
-    fn encode(&self, data: u32, dest: &mut [u8]) {
-        assert_eq!(dest.len(), 4);
-        match self {
+impl Encoding for u32 {
+    fn encode(&self, order: &ByteOrder, dest: &mut [u8]) {
+        assert!(dest.len() >= 4);
+        match order {
             ByteOrder::MSBFirst => {
-                dest[0] = (data >> 24 & 255) as u8;
-                dest[1] = (data >> 16 & 255) as u8;
-                dest[2] = (data >> 08 & 255) as u8;
-                dest[3] = (data >> 00 & 255) as u8;
+                dest[0] = (self >> 24 & 255) as u8;
+                dest[1] = (self >> 16 & 255) as u8;
+                dest[2] = (self >> 08 & 255) as u8;
+                dest[3] = (self >> 00 & 255) as u8;
             }
             ByteOrder::LSBFirst => {
-                dest[0] = (data >> 00 & 255) as u8;
-                dest[1] = (data >> 08 & 255) as u8;
-                dest[2] = (data >> 16 & 255) as u8;
-                dest[3] = (data >> 24 & 255) as u8;
+                dest[0] = (self >> 00 & 255) as u8;
+                dest[1] = (self >> 08 & 255) as u8;
+                dest[2] = (self >> 16 & 255) as u8;
+                dest[3] = (self >> 24 & 255) as u8;
             }
         }
     }
 
-    fn decode(&self, data: &[u8]) -> u32 {
-        assert_eq!(data.len(), 4);
-        match self {
+    fn decode(order: &ByteOrder, data: &[u8]) -> Self {
+        assert!(data.len() >= 4);
+        match order {
             ByteOrder::MSBFirst => {
                 (data[0] as u32) << 24 |
                     (data[1] as u32) << 16 |
@@ -114,36 +115,36 @@ impl Encoding<u32> for ByteOrder {
     }
 }
 
-impl Encoding<i8> for ByteOrder {
-    fn encode(&self, data: i8, dest: &mut [u8]) {
-        assert_eq!(dest.len(), 1);
-        dest[0] = data as u8;
+impl Encoding for i8 {
+    fn encode(&self, _order: &ByteOrder, dest: &mut [u8]) {
+        assert!(dest.len() >= 1);
+        dest[0] = *self as u8;
     }
 
-    fn decode(&self, data: &[u8]) -> i8 {
-        assert_eq!(data.len(), 1);
+    fn decode(_order: &ByteOrder, data: &[u8]) -> Self {
+        assert!(data.len() >= 1);
         data[0] as i8
     }
 }
 
-impl Encoding<i16> for ByteOrder {
-    fn encode(&self, data: i16, dest: &mut [u8]) {
-        assert_eq!(dest.len(), 2);
-        match self {
+impl Encoding for i16 {
+    fn encode(&self, order: &ByteOrder, dest: &mut [u8]) {
+        assert!(dest.len() >= 2);
+        match order {
             ByteOrder::MSBFirst => {
-                dest[0] = (data >> 8 & 255) as u8;
-                dest[1] = (data >> 0 & 255) as u8;
+                dest[0] = (self >> 8 & 255) as u8;
+                dest[1] = (self >> 0 & 255) as u8;
             }
             ByteOrder::LSBFirst => {
-                dest[0] = (data >> 0 & 255) as u8;
-                dest[1] = (data >> 8 & 255) as u8;
+                dest[0] = (self >> 0 & 255) as u8;
+                dest[1] = (self >> 8 & 255) as u8;
             }
         }
     }
 
-    fn decode(&self, data: &[u8]) -> i16 {
-        assert_eq!(data.len(), 2);
-        match self {
+    fn decode(order: &ByteOrder, data: &[u8]) -> Self {
+        assert!(data.len() >= 2);
+        match order {
             ByteOrder::MSBFirst => {
                 (data[0] as i16) << 8 |
                     (data[1] as i16) << 0
@@ -156,28 +157,28 @@ impl Encoding<i16> for ByteOrder {
     }
 }
 
-impl Encoding<i32> for ByteOrder {
-    fn encode(&self, data: i32, dest: &mut [u8]) {
-        assert_eq!(dest.len(), 4);
-        match self {
+impl Encoding for i32 {
+    fn encode(&self, order: &ByteOrder, dest: &mut [u8]) {
+        assert!(dest.len() >= 4);
+        match order {
             ByteOrder::MSBFirst => {
-                dest[0] = (data >> 24 & 255) as u8;
-                dest[1] = (data >> 16 & 255) as u8;
-                dest[2] = (data >> 08 & 255) as u8;
-                dest[3] = (data >> 00 & 255) as u8;
+                dest[0] = (self >> 24 & 255) as u8;
+                dest[1] = (self >> 16 & 255) as u8;
+                dest[2] = (self >> 08 & 255) as u8;
+                dest[3] = (self >> 00 & 255) as u8;
             }
             ByteOrder::LSBFirst => {
-                dest[0] = (data >> 00 & 255) as u8;
-                dest[1] = (data >> 08 & 255) as u8;
-                dest[2] = (data >> 16 & 255) as u8;
-                dest[3] = (data >> 24 & 255) as u8;
+                dest[0] = (self >> 00 & 255) as u8;
+                dest[1] = (self >> 08 & 255) as u8;
+                dest[2] = (self >> 16 & 255) as u8;
+                dest[3] = (self >> 24 & 255) as u8;
             }
         }
     }
 
-    fn decode(&self, data: &[u8]) -> i32 {
-        assert_eq!(data.len(), 4);
-        match self {
+    fn decode(order: &ByteOrder, data: &[u8]) -> Self {
+        assert!(data.len() >= 4);
+        match order {
             ByteOrder::MSBFirst => {
                 (data[0] as i32) << 24 |
                     (data[1] as i32) << 16 |
