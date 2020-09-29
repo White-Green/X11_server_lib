@@ -21,15 +21,15 @@ pub enum ByteOrder {
 }
 
 impl ByteOrder {
-    fn encode<T>(&self, data: T, dest: &mut [u8]) where Self: Encoding<T> {
+    pub fn encode<T>(&self, data: T, dest: &mut [u8]) where Self: Encoding<T> {
         <Self as Encoding<T>>::encode(self, data, dest);
     }
-    fn decode<T>(&self, data: &[u8]) -> T where Self: Encoding<T> {
+    pub fn decode<T>(&self, data: &[u8]) -> T where Self: Encoding<T> {
         <Self as Encoding<T>>::decode(self, data)
     }
 }
 
-pub(crate) trait Encoding<T> {
+pub trait Encoding<T> {
     fn encode(&self, data: T, dest: &mut [u8]);
     fn decode(&self, data: &[u8]) -> T;
 }

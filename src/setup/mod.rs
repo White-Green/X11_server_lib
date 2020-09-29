@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::io::{Read, Write};
 
 use crate::{Error, Result};
 use crate::read_util::{ByteOrder, Encoding, read_specified_length};
@@ -48,4 +48,24 @@ pub fn read_setup(stream: &mut impl Read, buffer: &mut [u8]) -> Result<(ByteOrde
     };
 
     Ok((order, information))
+}
+
+pub fn write_setup(stream: &mut impl Write, buffer: &mut [u8], order: &ByteOrder, info: ConnectionSetupInformation) -> Result<()> {
+    buffer[0] =
+        match order {
+            ByteOrder::MSBFirst => { 0o102 }
+            ByteOrder::LSBFirst => { 0o154 }
+        };
+    order.encode(info.protocol_major_version, &mut buffer[2..4]);
+    order.encode(info.protocol_minor_version, &mut buffer[4..6]);
+    let name_len = info.authorization_protocol_name.as_bytes().len();
+    order.encode(name_len as u16, &mut buffer[6..8]);
+    let data_len = info.authorization_protocol_data.as_bytes().len();
+    order.encode(data_len as u16, &mut buffer[8..10]);
+    (&mut buffer[12..12 + name_len]).write(info.authorization_protocol_name.as_bytes()).map_err(|e| Error::IoError(e))?;
+    let name_len = (name_len & (-1isize ^ 3) as usize) + ((name_len << 1 | name_len << 2) & 4);
+    (&mut buffer[12 + name_len..12 + name_len + data_len]).write(info.authorization_protocol_data.as_bytes()).map_err(|e| Error::IoError(e))?;
+    let data_len = (data_len & (-1isize ^ 3) as usize) + ((data_len << 1 | data_len << 2) & 4);
+    stream.write(&buffer[..12 + name_len + data_len]).map_err(|e| Error::IoError(e))?;
+    Ok(())
 }
