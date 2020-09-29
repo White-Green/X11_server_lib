@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 use crate::read_util::ByteOrder::{LSBFirst, MSBFirst};
 use crate::setup::{ConnectionSetupInformation, read_setup, write_setup};
 

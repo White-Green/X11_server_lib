@@ -1,7 +1,7 @@
 use std::io::{Read, Write};
 
 use crate::{Error, Result};
-use crate::read_util::{ByteOrder, Encoding, read_specified_length};
+use crate::read_util::{ByteOrder, read_specified_length};
 
 mod test;
 
