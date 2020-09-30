@@ -125,3 +125,39 @@ impl Writable for ConnectionSetupFailed {
         Ok(())
     }
 }
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct ConnectionSetupAuthenticate {
+    pub reason: String,
+}
+
+impl Readable for ConnectionSetupAuthenticate {
+    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {//最初のopcodeは読まない
+        read_specified_length(stream, &mut [0; 5], 5)?;
+        let len = stream.read_value::<u16>(order)? as usize;
+        let mut len = len << 2;
+        let mut buffer = vec![0; len];
+        read_specified_length(stream, &mut buffer[..], len)?;
+        while len > 0 && buffer[len - 1] == 0 { len -= 1; }
+        let reason = std::str::from_utf8(&buffer[..len]).map_err(|e| Error::StringError(e))?;
+        let reason = reason.to_string();
+        Ok(ConnectionSetupAuthenticate {
+            reason,
+        })
+    }
+}
+
+impl Writable for ConnectionSetupAuthenticate {
+    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {//最初のopcodeも送る
+        stream.write_value(2u8, order)?;
+        stream.write(&[0; 5]).map_err(|e| Error::IoError(e))?;
+        let len = data.reason.len() as u16;
+        let q = (!len).wrapping_add(1) & 3;
+        stream.write_value((len + q) >> 2, order)?;
+        stream.write(data.reason.as_bytes()).map_err(|e| Error::IoError(e))?;
+        for _ in 0..q {
+            stream.write_value(0u8, order)?;
+        }
+        Ok(())
+    }
+}

@@ -108,3 +108,44 @@ mod setup_failed {
         Ok(())
     }
 }
+
+mod setup_authenticate {
+    use crate::read_util::ByteOrder::{MSBFirst, LSBFirst};
+    use crate::setup::ConnectionSetupAuthenticate;
+    use crate::read_util::{Readable, Writable};
+
+    #[test]
+    fn read_test() -> Result<(), ()> {
+        let input = [0, 0, 0, 0, 0, 0, 2, b'a', b'b', b'c', b'd', b'e', 0, 0, 0];
+        let data = ConnectionSetupAuthenticate::read(&mut &input[..], &MSBFirst).map_err(|_| ())?;
+        assert_eq!(data,
+                   ConnectionSetupAuthenticate {
+                       reason: String::from("abcde"),
+                   });
+
+        let input = [0, 0, 0, 0, 0, 2, 0, b'a', b'b', b'c', b'd', b'e', b'f', b'g', 0];
+        let data = ConnectionSetupAuthenticate::read(&mut &input[..], &LSBFirst).map_err(|_| ())?;
+        assert_eq!(data,
+                   ConnectionSetupAuthenticate {
+                       reason: String::from("abcdefg"),
+                   });
+        Ok(())
+    }
+
+    #[test]
+    fn write_test() -> Result<(), ()> {
+        let mut buffer = [0; 20];
+        let data = ConnectionSetupAuthenticate {
+            reason: String::from("abcde"),
+        };
+        ConnectionSetupAuthenticate::write(&mut &mut buffer[..], data, &MSBFirst).map_err(|_| ())?;
+        assert_eq!(&buffer[..13], &[2, 0, 0, 0, 0, 0, 0, 2, b'a', b'b', b'c', b'd', b'e', 0, 0, 0][..13]);
+
+        let data = ConnectionSetupAuthenticate {
+            reason: String::from("abcdefg"),
+        };
+        ConnectionSetupAuthenticate::write(&mut &mut buffer[..], data, &LSBFirst).map_err(|_| ())?;
+        assert_eq!(&buffer[..15], &[2, 0, 0, 0, 0, 0, 2, 0, b'a', b'b', b'c', b'd', b'e', b'f', b'g', 0][..15]);
+        Ok(())
+    }
+}
