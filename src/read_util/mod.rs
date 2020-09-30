@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::io::{Read, Write};
 
 use crate::{Error, Result};
 
@@ -31,11 +31,13 @@ impl ByteOrder {
 }
 
 pub trait Encoding {
+    const SIZE: usize;
     fn encode(&self, order: &ByteOrder, dest: &mut [u8]);
     fn decode(order: &ByteOrder, data: &[u8]) -> Self;
 }
 
 impl Encoding for u8 {
+    const SIZE: usize = 1;
     fn encode(&self, _order: &ByteOrder, dest: &mut [u8]) {
         assert!(dest.len() >= 1);
         dest[0] = *self;
@@ -48,6 +50,7 @@ impl Encoding for u8 {
 }
 
 impl Encoding for u16 {
+    const SIZE: usize = 2;
     fn encode(&self, order: &ByteOrder, dest: &mut [u8]) {
         assert!(dest.len() >= 2);
         match order {
@@ -78,6 +81,7 @@ impl Encoding for u16 {
 }
 
 impl Encoding for u32 {
+    const SIZE: usize = 4;
     fn encode(&self, order: &ByteOrder, dest: &mut [u8]) {
         assert!(dest.len() >= 4);
         match order {
@@ -116,6 +120,7 @@ impl Encoding for u32 {
 }
 
 impl Encoding for i8 {
+    const SIZE: usize = 1;
     fn encode(&self, _order: &ByteOrder, dest: &mut [u8]) {
         assert!(dest.len() >= 1);
         dest[0] = *self as u8;
@@ -128,6 +133,7 @@ impl Encoding for i8 {
 }
 
 impl Encoding for i16 {
+    const SIZE: usize = 2;
     fn encode(&self, order: &ByteOrder, dest: &mut [u8]) {
         assert!(dest.len() >= 2);
         match order {
@@ -158,6 +164,7 @@ impl Encoding for i16 {
 }
 
 impl Encoding for i32 {
+    const SIZE: usize = 4;
     fn encode(&self, order: &ByteOrder, dest: &mut [u8]) {
         assert!(dest.len() >= 4);
         match order {
@@ -192,5 +199,50 @@ impl Encoding for i32 {
                     (data[3] as i32) << 24
             }
         }
+    }
+}
+
+pub trait Readable: Sized {
+    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self>;
+}
+
+pub trait Writable: Sized {
+    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()>;
+}
+
+impl<V: Sized + Encoding> Readable for V {
+    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+        let mut buffer = vec![0; V::SIZE];
+        read_specified_length(stream, &mut buffer[..], V::SIZE)?;
+        Ok(V::decode(order, &buffer[..]))
+    }
+}
+
+impl<V: Sized + Encoding> Writable for V {
+    fn write(stream: &mut impl Write, data: V, order: &ByteOrder) -> Result<()> {
+        let mut buffer = vec![0; V::SIZE];
+        data.encode(order, &mut buffer[..]);
+        stream.write(&buffer[..]).map_err(|e| Error::IoError(e))?;
+        Ok(())
+    }
+}
+
+pub trait ReadableRead {
+    fn read_value<T: Readable>(&mut self, order: &ByteOrder) -> Result<T>;
+}
+
+pub trait WritableWrite {
+    fn write_value<T: Writable>(&mut self, data: T, order: &ByteOrder) -> Result<()>;
+}
+
+impl<S: Read> ReadableRead for S {
+    fn read_value<T: Readable>(&mut self, order: &ByteOrder) -> Result<T> {
+        T::read(self, order)
+    }
+}
+
+impl<S: Write> WritableWrite for S {
+    fn write_value<T: Writable>(&mut self, data: T, order: &ByteOrder) -> Result<()> {
+        T::write(self, data, order)
     }
 }
