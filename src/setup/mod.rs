@@ -8,10 +8,10 @@ mod test;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConnectionSetupInformation {
-    protocol_major_version: u16,
-    protocol_minor_version: u16,
-    authorization_protocol_name: String,
-    authorization_protocol_data: String,
+    pub protocol_major_version: u16,
+    pub protocol_minor_version: u16,
+    pub authorization_protocol_name: String,
+    pub authorization_protocol_data: String,
 }
 
 pub fn read_setup(stream: &mut impl Read, buffer: &mut [u8]) -> Result<(ByteOrder, ConnectionSetupInformation)> {
@@ -87,9 +87,9 @@ pub fn write_setup(stream: &mut impl Write, buffer: &mut [u8], order: &ByteOrder
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ConnectionSetupFailed {
-    protocol_major_version: u16,
-    protocol_minor_version: u16,
-    reason: String,
+    pub protocol_major_version: u16,
+    pub protocol_minor_version: u16,
+    pub reason: String,
 }
 
 impl Readable for ConnectionSetupFailed {

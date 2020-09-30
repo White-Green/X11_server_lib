@@ -2,7 +2,9 @@ use std::convert::TryFrom;
 use std::io::Read;
 use std::net::TcpListener;
 
-use xwindow::setup::read_setup;
+use xwindow::Error;
+use xwindow::read_util::WritableWrite;
+use xwindow::setup::{ConnectionSetupFailed, read_setup};
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:6000").unwrap();
@@ -13,6 +15,19 @@ fn main() {
         Ok((order, info)) => {
             println!("{:#?}", order);
             println!("{:#?}", info);
+            let failed_data = ConnectionSetupFailed {
+                protocol_major_version: 11,
+                protocol_minor_version: 0,
+                reason: String::from("こんにちは！このディスプレイはまだ使えません！ "),
+            };
+            match stream.write_value(failed_data, &order) {
+                Ok(()) => {
+                    println!("failed OK!");
+                }
+                Err(err) => {
+                    println!("{:#?}", err);
+                }
+            };
         }
         Err(e) => {
             println!("{:#?}", e);
