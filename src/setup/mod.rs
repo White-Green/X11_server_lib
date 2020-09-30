@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 /// https://www.x.org/releases/current/doc/xproto/x11protocol.html#Encoding::Connection_Setup
 use std::io::{Read, Write};
 
@@ -140,7 +141,7 @@ impl Readable for ConnectionSetupAuthenticate {
         read_specified_length(stream, &mut buffer[..], len)?;
         while len > 0 && buffer[len - 1] == 0 { len -= 1; }
         let reason = std::str::from_utf8(&buffer[..len]).map_err(|e| Error::StringError(e))?;
-        let reason = reason.to_string();
+        let reason = reason.to_string();//ここreasonの長さがわからないから適当に末尾の0消すぐらいでやってる
         Ok(ConnectionSetupAuthenticate {
             reason,
         })
@@ -160,4 +161,126 @@ impl Writable for ConnectionSetupAuthenticate {
         }
         Ok(())
     }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+enum ImageByteOrder {
+    LSBFirst,
+    MSBFirst,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+enum BitmapFormatBitOrder {
+    MostSignificant,
+    LeastSignificant,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+struct Format {
+    depth: u8,
+    bits_per_pixel: u8,
+    scanline_pad: u8,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+enum BackingStores {
+    Never,
+    WhenMapped,
+    Always,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+enum Class {
+    StaticGray,
+    GrayScale,
+    StaticColor,
+    PseudoColor,
+    TrueColor,
+    DirectColor,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+struct VisualType {
+    visual_id: u32,
+    class: Class,
+    bits_per_rgb_value: u8,
+    colormap_entries: u16,
+    red_mask: u32,
+    green_mask: u32,
+    blue_mask: u32,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+struct Depth {
+    depth: u8,
+    visuals: Vec<VisualType>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+enum Event {
+    //TODO:別のとこで定義したほうがいいので移動させる
+    KeyPress,
+    KeyRelease,
+    ButtonPress,
+    ButtonRelease,
+    EnterWindow,
+    LeaveWindow,
+    PointerMotion,
+    PointerMotionHint,
+    Button1Motion,
+    Button2Motion,
+    Button3Motion,
+    Button4Motion,
+    Button5Motion,
+    ButtonMotion,
+    KeymapState,
+    Exposure,
+    VisibilityChange,
+    StructureNotify,
+    ResizeRedirect,
+    SubstructureNotify,
+    SubstructureRedirect,
+    FocusChange,
+    PropertyChange,
+    ColormapChange,
+    OwnerGrabButton,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+struct Screen {
+    root: u32,
+    default_colormap: u32,
+    white_pixel: u32,
+    black_pixel: u32,
+    current_input_masks: HashSet<Event>,
+    width_in_pixels: u16,
+    height_in_pixels: u16,
+    width_in_millimeters: u16,
+    height_in_millimeters: u16,
+    min_installed_maps: u16,
+    max_installed_maps: u16,
+    root_visual: u32,
+    save_unders: bool,
+    root_depth: u8,
+
+}
+
+#[derive(Debug, PartialEq, Clone)]
+struct ConnectionSetupSuccess {
+    protocol_major_version: u16,
+    protocol_minor_version: u16,
+    release_number: u32,
+    resource_id_base: u32,
+    resource_id_mask: u32,
+    motion_buffer_size: u32,
+    maximum_request_length: u16,
+    image_byte_order: ImageByteOrder,
+    bitmap_format_bit_order: BitmapFormatBitOrder,
+    bitmap_format_scanline_unit: u8,
+    bitmap_format_scanline_pad: u8,
+    min_keycode: u8,
+    max_keycode: u8,
+    vendor: String,
+    pixmap_formats: Vec<Format>,
+    roots: Vec<Screen>,
 }
