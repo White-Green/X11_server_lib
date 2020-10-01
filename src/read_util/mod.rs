@@ -10,6 +10,9 @@ pub(crate) fn read_specified_length(stream: &mut impl Read, buffer: &mut [u8], l
     while read_length < length {
         let i = stream.read(&mut buffer[read_length..length])
             .map_err(|e| Error::IoError(e))?;
+        if i == 0 {
+            return Err(Error::UnknownError);
+        }
         read_length += i;
     }
     Ok(length)

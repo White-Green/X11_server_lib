@@ -1,5 +1,5 @@
-use std::collections::HashSet;
 /// https://www.x.org/releases/current/doc/xproto/x11protocol.html#Encoding::Connection_Setup
+use std::collections::HashSet;
 use std::io::{Read, Write};
 
 use crate::{Error, Result};
@@ -164,33 +164,135 @@ impl Writable for ConnectionSetupAuthenticate {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-enum ImageByteOrder {
+pub enum ImageByteOrder {
     LSBFirst,
     MSBFirst,
 }
 
+impl Readable for ImageByteOrder {
+    fn read(stream: &mut impl Read, _order: &ByteOrder) -> Result<Self> {
+        let mut buffer = [0];
+        read_specified_length(stream, &mut buffer[..], 1)?;
+        match buffer[0] {
+            0 => { Ok(Self::LSBFirst) }
+            1 => { Ok(Self::MSBFirst) }
+            _ => { Err(Error::InvalidValue("ImageByteOrder")) }
+        }
+    }
+}
+
+impl Writable for ImageByteOrder {
+    fn write(stream: &mut impl Write, data: Self, _order: &ByteOrder) -> Result<()> {
+        let buffer = [
+            match data {
+                ImageByteOrder::LSBFirst => { 0 }
+                ImageByteOrder::MSBFirst => { 1 }
+            }
+        ];
+        match stream.write(&buffer[..]) {
+            Ok(i) if i == 1 => { Ok(()) }
+            Err(e) => { Err(Error::IoError(e)) }
+            _ => { Err(Error::UnknownError) }
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
-enum BitmapFormatBitOrder {
-    MostSignificant,
+pub enum BitmapFormatBitOrder {
     LeastSignificant,
+    MostSignificant,
+}
+
+impl Readable for BitmapFormatBitOrder {
+    fn read(stream: &mut impl Read, _order: &ByteOrder) -> Result<Self> {
+        let mut buffer = [0];
+        read_specified_length(stream, &mut buffer[..], 1)?;
+        match buffer[0] {
+            0 => { Ok(Self::LeastSignificant) }
+            1 => { Ok(Self::MostSignificant) }
+            _ => { Err(Error::InvalidValue("BitmapFormatBitOrder")) }
+        }
+    }
+}
+
+impl Writable for BitmapFormatBitOrder {
+    fn write(stream: &mut impl Write, data: Self, _order: &ByteOrder) -> Result<()> {
+        let buffer = [
+            match data {
+                BitmapFormatBitOrder::LeastSignificant => { 0 }
+                BitmapFormatBitOrder::MostSignificant => { 1 }
+            }
+        ];
+        match stream.write(&buffer[..]) {
+            Ok(i)if i == 1 => { Ok(()) }
+            Err(e) => { Err(Error::IoError(e)) }
+            _ => { Err(Error::UnknownError) }
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
-struct Format {
-    depth: u8,
-    bits_per_pixel: u8,
-    scanline_pad: u8,
+pub struct Format {
+    pub depth: u8,
+    pub bits_per_pixel: u8,
+    pub scanline_pad: u8,
+}
+
+impl Readable for Format {
+    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+        let depth = stream.read_value(order)?;
+        let bits_per_pixel = stream.read_value(order)?;
+        let scanline_pad = stream.read_value(order)?;
+        read_specified_length(stream, &mut [0; 5][..], 5)?;
+        Ok(Format {
+            depth,
+            bits_per_pixel,
+            scanline_pad,
+        })
+    }
+}
+
+impl Writable for Format {
+    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+        stream.write_value(data.depth, order)?;
+        stream.write_value(data.bits_per_pixel, order)?;
+        stream.write_value(data.scanline_pad, order)?;
+        stream.write(&[0; 5][..]).map_err(|e| Error::IoError(e))?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
-enum BackingStores {
+pub enum BackingStores {
     Never,
     WhenMapped,
     Always,
 }
 
+impl Readable for BackingStores {
+    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+        match stream.read_value::<u8>(order)? {
+            0 => Ok(BackingStores::Never),
+            1 => Ok(BackingStores::WhenMapped),
+            2 => Ok(BackingStores::Always),
+            _ => Err(Error::UnknownError),
+        }
+    }
+}
+
+impl Writable for BackingStores {
+    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+        let value = match data {
+            BackingStores::Never => 0,
+            BackingStores::WhenMapped => 1,
+            BackingStores::Always => 2,
+        };
+        stream.write_value::<u8>(value, order)
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
-enum Class {
+pub enum Class {
     StaticGray,
     GrayScale,
     StaticColor,
@@ -199,25 +301,119 @@ enum Class {
     DirectColor,
 }
 
-#[derive(Debug, PartialEq, Clone)]
-struct VisualType {
-    visual_id: u32,
-    class: Class,
-    bits_per_rgb_value: u8,
-    colormap_entries: u16,
-    red_mask: u32,
-    green_mask: u32,
-    blue_mask: u32,
+impl Readable for Class {
+    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+        match stream.read_value::<u8>(order)? {
+            0 => Ok(Class::StaticGray),
+            1 => Ok(Class::GrayScale),
+            2 => Ok(Class::StaticColor),
+            3 => Ok(Class::PseudoColor),
+            4 => Ok(Class::TrueColor),
+            5 => Ok(Class::DirectColor),
+            _ => Err(Error::UnknownError),
+        }
+    }
+}
+
+impl Writable for Class {
+    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+        let value = match data {
+            Class::StaticGray => 0,
+            Class::GrayScale => 1,
+            Class::StaticColor => 2,
+            Class::PseudoColor => 3,
+            Class::TrueColor => 4,
+            Class::DirectColor => 5,
+        };
+        stream.write_value::<u8>(value, order)
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
-struct Depth {
-    depth: u8,
-    visuals: Vec<VisualType>,
+pub struct VisualType {
+    pub visual_id: u32,
+    pub class: Class,
+    pub bits_per_rgb_value: u8,
+    pub colormap_entries: u16,
+    pub red_mask: u32,
+    pub green_mask: u32,
+    pub blue_mask: u32,
+}
+
+impl Readable for VisualType {
+    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+        let visual_id = stream.read_value(order)?;
+        let class = stream.read_value(order)?;
+        let bits_per_rgb_value = stream.read_value(order)?;
+        let colormap_entries = stream.read_value(order)?;
+        let red_mask = stream.read_value(order)?;
+        let green_mask = stream.read_value(order)?;
+        let blue_mask = stream.read_value(order)?;
+        read_specified_length(stream, &mut [0; 4], 4)?;
+        Ok(VisualType {
+            visual_id,
+            class,
+            bits_per_rgb_value,
+            colormap_entries,
+            red_mask,
+            green_mask,
+            blue_mask,
+        })
+    }
+}
+
+impl Writable for VisualType {
+    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+        stream.write_value(data.visual_id, order)?;
+        stream.write_value(data.class, order)?;
+        stream.write_value(data.bits_per_rgb_value, order)?;
+        stream.write_value(data.colormap_entries, order)?;
+        stream.write_value(data.red_mask, order)?;
+        stream.write_value(data.green_mask, order)?;
+        stream.write_value(data.blue_mask, order)?;
+        stream.write(&[0; 4][..]).map_err(|e| Error::IoError(e))?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
-enum Event {
+pub struct Depth {
+    pub depth: u8,
+    pub visuals: Vec<VisualType>,
+}
+
+impl Readable for Depth {
+    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+        let depth = stream.read_value(order)?;
+        read_specified_length(stream, &mut [0; 1], 1)?;
+        let n = stream.read_value::<u16>(order)? as usize;
+        read_specified_length(stream, &mut [0; 4], 4)?;
+        let mut visuals = Vec::with_capacity(n);
+        for _ in 0..n {
+            visuals.push(stream.read_value(order)?);
+        }
+        Ok(Depth {
+            depth,
+            visuals,
+        })
+    }
+}
+
+impl Writable for Depth {
+    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+        stream.write_value(data.depth, order)?;
+        stream.write(&[0; 1]).map_err(|e| Error::IoError(e))?;
+        stream.write_value(data.visuals.len() as u16, order)?;
+        stream.write(&[0; 4]).map_err(|e| Error::IoError(e))?;
+        for visual in data.visuals {
+            stream.write_value(visual, order)?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub enum Event {
     //TODO:別のとこで定義したほうがいいので移動させる
     KeyPress,
     KeyRelease,
@@ -246,41 +442,128 @@ enum Event {
     OwnerGrabButton,
 }
 
-#[derive(Debug, PartialEq, Clone)]
-struct Screen {
-    root: u32,
-    default_colormap: u32,
-    white_pixel: u32,
-    black_pixel: u32,
-    current_input_masks: HashSet<Event>,
-    width_in_pixels: u16,
-    height_in_pixels: u16,
-    width_in_millimeters: u16,
-    height_in_millimeters: u16,
-    min_installed_maps: u16,
-    max_installed_maps: u16,
-    root_visual: u32,
-    save_unders: bool,
-    root_depth: u8,
+impl Readable for HashSet<Event> {
+    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+        const VALUES: [Event; 25] = [
+            Event::KeyPress,
+            Event::KeyRelease,
+            Event::ButtonPress,
+            Event::ButtonRelease,
+            Event::EnterWindow,
+            Event::LeaveWindow,
+            Event::PointerMotion,
+            Event::PointerMotionHint,
+            Event::Button1Motion,
+            Event::Button2Motion,
+            Event::Button3Motion,
+            Event::Button4Motion,
+            Event::Button5Motion,
+            Event::ButtonMotion,
+            Event::KeymapState,
+            Event::Exposure,
+            Event::VisibilityChange,
+            Event::StructureNotify,
+            Event::ResizeRedirect,
+            Event::SubstructureNotify,
+            Event::SubstructureRedirect,
+            Event::FocusChange,
+            Event::PropertyChange,
+            Event::ColormapChange,
+            Event::OwnerGrabButton,
+        ];
+        let value = stream.read_value::<u32>(order)?;
+        if value & 0xFE000000 != 0 { return Err(Error::InvalidValue("Set of Event")); }
+        let count = {
+            let value = (value & 0x55555555) + ((value >> 1) & 0x55555555);
+            let value = (value & 0x33333333) + ((value >> 2) & 0x33333333);
+            let value = (value & 0x0F0F0F0F) + ((value >> 4) & 0x0F0F0F0F);
+            let value = (value & 0x00FF00FF) + ((value >> 8) & 0x00FF00FF);
+            (value & 0x0000FFFF) + ((value >> 16) & 0x0000FFFF)
+        };
+        let mut result = HashSet::with_capacity(count as usize);
+        for i in 0..VALUES.len() {
+            if ((value >> i) & 1) == 1 {
+                result.insert(VALUES[i].clone());
+            }
+        }
+        Ok(result)
+    }
+}
 
+impl Writable for HashSet<Event> {
+    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+        const VALUES: [Event; 25] = [
+            Event::KeyPress,
+            Event::KeyRelease,
+            Event::ButtonPress,
+            Event::ButtonRelease,
+            Event::EnterWindow,
+            Event::LeaveWindow,
+            Event::PointerMotion,
+            Event::PointerMotionHint,
+            Event::Button1Motion,
+            Event::Button2Motion,
+            Event::Button3Motion,
+            Event::Button4Motion,
+            Event::Button5Motion,
+            Event::ButtonMotion,
+            Event::KeymapState,
+            Event::Exposure,
+            Event::VisibilityChange,
+            Event::StructureNotify,
+            Event::ResizeRedirect,
+            Event::SubstructureNotify,
+            Event::SubstructureRedirect,
+            Event::FocusChange,
+            Event::PropertyChange,
+            Event::ColormapChange,
+            Event::OwnerGrabButton,
+        ];
+        let mut value: u32 = 0;
+        for i in 0..VALUES.len() {
+            if data.contains(&VALUES[i]) {
+                value |= 1 << i;
+            }
+        }
+        stream.write_value(value, order)?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
-struct ConnectionSetupSuccess {
-    protocol_major_version: u16,
-    protocol_minor_version: u16,
-    release_number: u32,
-    resource_id_base: u32,
-    resource_id_mask: u32,
-    motion_buffer_size: u32,
-    maximum_request_length: u16,
-    image_byte_order: ImageByteOrder,
-    bitmap_format_bit_order: BitmapFormatBitOrder,
-    bitmap_format_scanline_unit: u8,
-    bitmap_format_scanline_pad: u8,
-    min_keycode: u8,
-    max_keycode: u8,
-    vendor: String,
-    pixmap_formats: Vec<Format>,
-    roots: Vec<Screen>,
+pub struct Screen {
+    pub root: u32,
+    pub default_colormap: u32,
+    pub white_pixel: u32,
+    pub black_pixel: u32,
+    pub current_input_masks: HashSet<Event>,
+    pub width_in_pixels: u16,
+    pub height_in_pixels: u16,
+    pub width_in_millimeters: u16,
+    pub height_in_millimeters: u16,
+    pub min_installed_maps: u16,
+    pub max_installed_maps: u16,
+    pub root_visual: u32,
+    pub save_unders: bool,
+    pub root_depth: u8,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct ConnectionSetupSuccess {
+    pub protocol_major_version: u16,
+    pub protocol_minor_version: u16,
+    pub release_number: u32,
+    pub resource_id_base: u32,
+    pub resource_id_mask: u32,
+    pub motion_buffer_size: u32,
+    pub maximum_request_length: u16,
+    pub image_byte_order: ImageByteOrder,
+    pub bitmap_format_bit_order: BitmapFormatBitOrder,
+    pub bitmap_format_scanline_unit: u8,
+    pub bitmap_format_scanline_pad: u8,
+    pub min_keycode: u8,
+    pub max_keycode: u8,
+    pub vendor: String,
+    pub pixmap_formats: Vec<Format>,
+    pub roots: Vec<Screen>,
 }
