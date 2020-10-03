@@ -642,12 +642,97 @@ pub struct ConnectionSetupSuccess {
 
 impl Readable for ConnectionSetupSuccess {
     fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
-        unimplemented!()
+        read_specified_length(stream, &mut [0; 1], 1)?;
+        let protocol_major_version = stream.read_value(order)?;
+        let protocol_minor_version = stream.read_value(order)?;
+        let _ = stream.read_value::<u16>(order)? as usize;
+        let release_number = stream.read_value(order)?;
+        let resource_id_base = stream.read_value(order)?;
+        let resource_id_mask = stream.read_value(order)?;
+        let motion_buffer_size = stream.read_value(order)?;
+        let length_of_vendor = stream.read_value::<u16>(order)? as usize;
+        let maximum_request_length = stream.read_value(order)?;
+        let number_of_screens = stream.read_value::<u8>(order)? as usize;
+        let number_of_formats = stream.read_value::<u8>(order)? as usize;
+        let image_byte_order = stream.read_value(order)?;
+        let bitmap_format_bit_order = stream.read_value(order)?;
+        let bitmap_format_scanline_unit = stream.read_value(order)?;
+        let bitmap_format_scanline_pad = stream.read_value(order)?;
+        let min_keycode = stream.read_value(order)?;
+        let max_keycode = stream.read_value(order)?;
+        read_specified_length(stream, &mut [0; 4], 4)?;
+        let len = (length_of_vendor & ((-1isize ^ 3) as usize)) + (((length_of_vendor << 1) | (length_of_vendor << 2)) & 4);
+        let mut buffer = vec![0u8; len];
+        read_specified_length(stream, &mut buffer, len)?;
+        let vendor = String::from(std::str::from_utf8(&buffer[..length_of_vendor]).map_err(|e| Error::StringError(e))?);
+        let mut pixmap_formats = Vec::with_capacity(number_of_formats);
+        for _ in 0..number_of_formats {
+            pixmap_formats.push(stream.read_value(order)?);
+        }
+        let mut roots = Vec::with_capacity(number_of_screens);
+        for _ in 0..number_of_screens {
+            roots.push(stream.read_value(order)?);
+        }
+        Ok(ConnectionSetupSuccess {
+            protocol_major_version,
+            protocol_minor_version,
+            release_number,
+            resource_id_base,
+            resource_id_mask,
+            motion_buffer_size,
+            maximum_request_length,
+            image_byte_order,
+            bitmap_format_bit_order,
+            bitmap_format_scanline_unit,
+            bitmap_format_scanline_pad,
+            min_keycode,
+            max_keycode,
+            vendor,
+            pixmap_formats,
+            roots,
+        })
     }
 }
 
 impl Writable for ConnectionSetupSuccess {
     fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
-        unimplemented!()
+        stream.write_value(1u8, order)?;
+        stream.write(&[0; 1]).map_err(|e| Error::IoError(e))?;
+        stream.write_value(data.protocol_major_version, order)?;
+        stream.write_value(data.protocol_minor_version, order)?;
+        let m = data.roots.iter().map(|screen| screen.allowed_depths.iter().map(|visual| visual.visuals.len() * 24 + 8).sum::<usize>() + 40).sum::<usize>();
+        let length_of_vendor = data.vendor.as_bytes().len();
+        let vp = (length_of_vendor & ((-1isize ^ 3) as usize)) + (((length_of_vendor << 1) | (length_of_vendor << 2)) & 4);
+        let len = 8 + 2 * data.pixmap_formats.len() + ((vp + m) >> 2);
+        assert!(len <= u16::MAX as usize);
+        stream.write_value(len as u16, order)?;
+        stream.write_value(data.release_number, order)?;
+        stream.write_value(data.resource_id_base, order)?;
+        stream.write_value(data.resource_id_mask, order)?;
+        stream.write_value(data.motion_buffer_size, order)?;
+        assert!(data.vendor.as_bytes().len() <= u16::MAX as usize);
+        stream.write_value(data.vendor.as_bytes().len() as u16, order)?;
+        stream.write_value(data.maximum_request_length, order)?;
+        assert!(data.roots.len() <= u8::MAX as usize);
+        stream.write_value(data.roots.len() as u8, order)?;
+        assert!(data.pixmap_formats.len() <= u8::MAX as usize);
+        stream.write_value(data.pixmap_formats.len() as u8, order)?;
+        stream.write_value(data.image_byte_order, order)?;
+        stream.write_value(data.bitmap_format_bit_order, order)?;
+        stream.write_value(data.bitmap_format_scanline_unit, order)?;
+        stream.write_value(data.bitmap_format_scanline_pad, order)?;
+        stream.write_value(data.min_keycode, order)?;
+        stream.write_value(data.max_keycode, order)?;
+        stream.write_all(&[0; 4]).map_err(|e| Error::IoError(e))?;
+        stream.write_all(data.vendor.as_bytes()).map_err(|e| Error::IoError(e))?;
+        let buf = vec![0; (!data.vendor.as_bytes().len()).wrapping_add(1) & 3];
+        stream.write_all(&buf).map_err(|e| Error::IoError(e))?;
+        for format in data.pixmap_formats {
+            stream.write_value(format, order)?;
+        }
+        for screen in data.roots {
+            stream.write_value(screen, order)?;
+        }
+        Ok(())
     }
 }

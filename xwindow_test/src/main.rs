@@ -4,7 +4,7 @@ use std::net::TcpListener;
 
 use xwindow::Error;
 use xwindow::read_util::WritableWrite;
-use xwindow::setup::{ConnectionSetupFailed, read_setup};
+use xwindow::setup::{BackingStores, BitmapFormatBitOrder, Class, ConnectionSetupFailed, ConnectionSetupSuccess, Depth, Format, ImageByteOrder, read_setup, Screen, VisualType};
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:6000").unwrap();
@@ -20,7 +20,81 @@ fn main() {
                 protocol_minor_version: 0,
                 reason: String::from("こんにちは！このディスプレイはまだ使えません！ "),
             };
-            match stream.write_value(failed_data, &order) {
+            let success_data = ConnectionSetupSuccess {
+                protocol_major_version: 11,
+                protocol_minor_version: 0,
+                release_number: 1,
+                resource_id_base: 0,
+                resource_id_mask: 0x1f_ff_ff_ff,
+                motion_buffer_size: 1 << 20,
+                maximum_request_length: 65535,
+                image_byte_order: ImageByteOrder::LSBFirst,
+                bitmap_format_bit_order: BitmapFormatBitOrder::LeastSignificant,
+                bitmap_format_scanline_unit: 4,
+                bitmap_format_scanline_pad: 0,
+                min_keycode: 0,
+                max_keycode: 100,
+                vendor: "test".to_string(),
+                pixmap_formats: vec![Format {
+                    depth: 8,
+                    bits_per_pixel: 24,
+                    scanline_pad: 0,
+                }],
+                roots: vec![Screen {
+                    root: 0,
+                    default_colormap: 0,
+                    white_pixel: 0,
+                    black_pixel: 0,
+                    current_input_masks: Default::default(),
+                    width_in_pixels: 1,
+                    height_in_pixels: 1,
+                    width_in_millimeters: 1,
+                    height_in_millimeters: 1,
+                    min_installed_maps: 0,
+                    max_installed_maps: 0,
+                    root_visual: 0,
+                    backing_stores: BackingStores::Never,
+                    save_unders: false,
+                    root_depth: 8,
+                    allowed_depths: vec![
+                        Depth {
+                            depth: 8,
+                            visuals: vec![
+                                VisualType {
+                                    visual_id: 0,
+                                    class: Class::StaticGray,
+                                    bits_per_rgb_value: 8,
+                                    colormap_entries: 0,
+                                    red_mask: 0xff_00_00,
+                                    green_mask: 0x00_ff_00,
+                                    blue_mask: 0x00_00_ff,
+                                }],
+                        },
+                        Depth {
+                            depth: 8,
+                            visuals: vec![
+                                VisualType {
+                                    visual_id: 1,
+                                    class: Class::StaticGray,
+                                    bits_per_rgb_value: 8,
+                                    colormap_entries: 0,
+                                    red_mask: 0xff_00_00,
+                                    green_mask: 0x00_ff_00,
+                                    blue_mask: 0x00_00_ff,
+                                },
+                                VisualType {
+                                    visual_id: 2,
+                                    class: Class::StaticGray,
+                                    bits_per_rgb_value: 8,
+                                    colormap_entries: 0,
+                                    red_mask: 0xff_00_00,
+                                    green_mask: 0x00_ff_00,
+                                    blue_mask: 0x00_00_ff,
+                                }],
+                        }],
+                }],
+            };
+            match stream.write_value(success_data, &order) {
                 Ok(()) => {
                     println!("failed OK!");
                 }
@@ -33,7 +107,6 @@ fn main() {
             println!("{:#?}", e);
         }
     };
-    return;
     loop {
         let length = stream.read(&mut buffer).unwrap();
         if length == 0 {
