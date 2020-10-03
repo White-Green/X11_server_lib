@@ -736,3 +736,30 @@ impl Writable for ConnectionSetupSuccess {
         Ok(())
     }
 }
+
+pub enum ConnectionSetupResponse {
+    Failed(ConnectionSetupFailed),
+    Authenticate(ConnectionSetupAuthenticate),
+    Success(ConnectionSetupSuccess),
+}
+
+impl Readable for ConnectionSetupResponse {
+    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+        match stream.read_value(order)? {
+            0 => Ok(Self::Failed(stream.read_value(order)?)),
+            1 => Ok(Self::Success(stream.read_value(order)?)),
+            2 => Ok(Self::Authenticate(stream.read_value(order)?)),
+            _ => Err(Error::InvalidValue("connection setup response status"))
+        }
+    }
+}
+
+impl Writable for ConnectionSetupResponse {
+    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+        match data {
+            ConnectionSetupResponse::Failed(failed) => stream.write_value(failed, order),
+            ConnectionSetupResponse::Authenticate(authenticate) => stream.write_value(authenticate, order),
+            ConnectionSetupResponse::Success(success) => stream.write_value(success, order),
+        }
+    }
+}
