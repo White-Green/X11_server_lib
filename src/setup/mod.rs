@@ -403,6 +403,7 @@ impl Writable for Depth {
     fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
         stream.write_value(data.depth, order)?;
         stream.write(&[0; 1]).map_err(|e| Error::IoError(e))?;
+        assert!(data.visuals.len() <= u16::MAX as usize);
         stream.write_value(data.visuals.len() as u16, order)?;
         stream.write(&[0; 4]).map_err(|e| Error::IoError(e))?;
         for visual in data.visuals {
@@ -544,8 +545,79 @@ pub struct Screen {
     pub min_installed_maps: u16,
     pub max_installed_maps: u16,
     pub root_visual: u32,
+    pub backing_stores: BackingStores,
     pub save_unders: bool,
     pub root_depth: u8,
+    pub allowed_depths: Vec<Depth>,
+}
+
+impl Readable for Screen {
+    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+        let root = stream.read_value(order)?;
+        let default_colormap = stream.read_value(order)?;
+        let white_pixel = stream.read_value(order)?;
+        let black_pixel = stream.read_value(order)?;
+        let current_input_masks = stream.read_value(order)?;
+        let width_in_pixels = stream.read_value(order)?;
+        let height_in_pixels = stream.read_value(order)?;
+        let width_in_millimeters = stream.read_value(order)?;
+        let height_in_millimeters = stream.read_value(order)?;
+        let min_installed_maps = stream.read_value(order)?;
+        let max_installed_maps = stream.read_value(order)?;
+        let root_visual = stream.read_value(order)?;
+        let backing_stores = stream.read_value(order)?;
+        let save_unders = stream.read_value(order)?;
+        let root_depth = stream.read_value(order)?;
+        let len = stream.read_value::<u8>(order)? as usize;
+        let mut allowed_depths = Vec::with_capacity(len);
+        for _ in 0..len {
+            allowed_depths.push(stream.read_value(order)?);
+        }
+        Ok(Screen {
+            root,
+            default_colormap,
+            white_pixel,
+            black_pixel,
+            current_input_masks,
+            width_in_pixels,
+            height_in_pixels,
+            width_in_millimeters,
+            height_in_millimeters,
+            min_installed_maps,
+            max_installed_maps,
+            root_visual,
+            backing_stores,
+            save_unders,
+            root_depth,
+            allowed_depths,
+        })
+    }
+}
+
+impl Writable for Screen {
+    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+        stream.write_value(data.root, order)?;
+        stream.write_value(data.default_colormap, order)?;
+        stream.write_value(data.white_pixel, order)?;
+        stream.write_value(data.black_pixel, order)?;
+        stream.write_value(data.current_input_masks, order)?;
+        stream.write_value(data.width_in_pixels, order)?;
+        stream.write_value(data.height_in_pixels, order)?;
+        stream.write_value(data.width_in_millimeters, order)?;
+        stream.write_value(data.height_in_millimeters, order)?;
+        stream.write_value(data.min_installed_maps, order)?;
+        stream.write_value(data.max_installed_maps, order)?;
+        stream.write_value(data.root_visual, order)?;
+        stream.write_value(data.backing_stores, order)?;
+        stream.write_value(data.save_unders, order)?;
+        stream.write_value(data.root_depth, order)?;
+        assert!(data.allowed_depths.len() <= u8::MAX as usize);
+        stream.write_value(data.allowed_depths.len() as u8, order)?;
+        for depth in data.allowed_depths {
+            stream.write_value(depth, order)?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -566,4 +638,16 @@ pub struct ConnectionSetupSuccess {
     pub vendor: String,
     pub pixmap_formats: Vec<Format>,
     pub roots: Vec<Screen>,
+}
+
+impl Readable for ConnectionSetupSuccess {
+    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+        unimplemented!()
+    }
+}
+
+impl Writable for ConnectionSetupSuccess {
+    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+        unimplemented!()
+    }
 }

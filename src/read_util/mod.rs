@@ -39,6 +39,19 @@ pub trait Encoding {
     fn decode(order: &ByteOrder, data: &[u8]) -> Self;
 }
 
+impl Encoding for bool {
+    const SIZE: usize = 1;
+    fn encode(&self, _order: &ByteOrder, dest: &mut [u8]) {
+        assert!(dest.len() >= 1);
+        dest[0] = if *self { 1 } else { 0 };
+    }
+
+    fn decode(_order: &ByteOrder, data: &[u8]) -> Self {
+        assert!(data.len() >= 1);
+        data[0] != 0
+    }
+}
+
 impl Encoding for u8 {
     const SIZE: usize = 1;
     fn encode(&self, _order: &ByteOrder, dest: &mut [u8]) {
