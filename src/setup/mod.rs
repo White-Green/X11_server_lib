@@ -78,11 +78,11 @@ pub fn write_setup(stream: &mut impl Write, buffer: &mut [u8], order: &ByteOrder
     let data_len = info.authorization_protocol_data.as_bytes().len();
     assert!(data_len <= u16::MAX as usize);
     order.encode(data_len as u16, &mut buffer[8..10]);
-    stream.write(&buffer[..12]).map_err(|e| Error::IoError(e))?;
-    stream.write(info.authorization_protocol_name.as_bytes()).map_err(|e| Error::IoError(e))?;
-    stream.write(&buffer[..((!name_len).wrapping_add(1)) & 0b11]).map_err(|e| Error::IoError(e))?;
-    stream.write(info.authorization_protocol_data.as_bytes()).map_err(|e| Error::IoError(e))?;
-    stream.write(&buffer[..((!data_len).wrapping_add(1)) & 0b11]).map_err(|e| Error::IoError(e))?;
+    stream.write_all(&buffer[..12]).map_err(|e| Error::IoError(e))?;
+    stream.write_all(info.authorization_protocol_name.as_bytes()).map_err(|e| Error::IoError(e))?;
+    stream.write_all(&buffer[..((!name_len).wrapping_add(1)) & 0b11]).map_err(|e| Error::IoError(e))?;
+    stream.write_all(info.authorization_protocol_data.as_bytes()).map_err(|e| Error::IoError(e))?;
+    stream.write_all(&buffer[..((!data_len).wrapping_add(1)) & 0b11]).map_err(|e| Error::IoError(e))?;
     Ok(())
 }
 
@@ -120,9 +120,9 @@ impl Writable for ConnectionSetupFailed {
         let len = data.reason.len() as u16;
         let q = (!len).wrapping_add(1) & 3;
         stream.write_value((len + q) >> 2, order)?;
-        stream.write(data.reason.as_bytes()).map_err(|e| Error::IoError(e))?;
+        stream.write_all(data.reason.as_bytes()).map_err(|e| Error::IoError(e))?;
         let buf = vec![0; q as usize];
-        stream.write(&buf[..]).map_err(|e| Error::IoError(e))?;
+        stream.write_all(&buf[..]).map_err(|e| Error::IoError(e))?;
         Ok(())
     }
 }
@@ -151,11 +151,11 @@ impl Readable for ConnectionSetupAuthenticate {
 impl Writable for ConnectionSetupAuthenticate {
     fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {//最初のopcodeも送る
         stream.write_value(2u8, order)?;
-        stream.write(&[0; 5]).map_err(|e| Error::IoError(e))?;
+        stream.write_all(&[0; 5]).map_err(|e| Error::IoError(e))?;
         let len = data.reason.len() as u16;
         let q = (!len).wrapping_add(1) & 3;
         stream.write_value((len + q) >> 2, order)?;
-        stream.write(data.reason.as_bytes()).map_err(|e| Error::IoError(e))?;
+        stream.write_all(data.reason.as_bytes()).map_err(|e| Error::IoError(e))?;
         for _ in 0..q {
             stream.write_value(0u8, order)?;
         }
@@ -257,7 +257,7 @@ impl Writable for Format {
         stream.write_value(data.depth, order)?;
         stream.write_value(data.bits_per_pixel, order)?;
         stream.write_value(data.scanline_pad, order)?;
-        stream.write(&[0; 5][..]).map_err(|e| Error::IoError(e))?;
+        stream.write_all(&[0; 5][..]).map_err(|e| Error::IoError(e))?;
         Ok(())
     }
 }
@@ -371,7 +371,7 @@ impl Writable for VisualType {
         stream.write_value(data.red_mask, order)?;
         stream.write_value(data.green_mask, order)?;
         stream.write_value(data.blue_mask, order)?;
-        stream.write(&[0; 4][..]).map_err(|e| Error::IoError(e))?;
+        stream.write_all(&[0; 4][..]).map_err(|e| Error::IoError(e))?;
         Ok(())
     }
 }
@@ -402,10 +402,10 @@ impl Readable for Depth {
 impl Writable for Depth {
     fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
         stream.write_value(data.depth, order)?;
-        stream.write(&[0; 1]).map_err(|e| Error::IoError(e))?;
+        stream.write_all(&[0; 1]).map_err(|e| Error::IoError(e))?;
         assert!(data.visuals.len() <= u16::MAX as usize);
         stream.write_value(data.visuals.len() as u16, order)?;
-        stream.write(&[0; 4]).map_err(|e| Error::IoError(e))?;
+        stream.write_all(&[0; 4]).map_err(|e| Error::IoError(e))?;
         for visual in data.visuals {
             stream.write_value(visual, order)?;
         }
@@ -697,7 +697,7 @@ impl Readable for ConnectionSetupSuccess {
 impl Writable for ConnectionSetupSuccess {
     fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
         stream.write_value(1u8, order)?;
-        stream.write(&[0; 1]).map_err(|e| Error::IoError(e))?;
+        stream.write_all(&[0; 1]).map_err(|e| Error::IoError(e))?;
         stream.write_value(data.protocol_major_version, order)?;
         stream.write_value(data.protocol_minor_version, order)?;
         let m = data.roots.iter().map(|screen| screen.allowed_depths.iter().map(|visual| visual.visuals.len() * 24 + 8).sum::<usize>() + 40).sum::<usize>();

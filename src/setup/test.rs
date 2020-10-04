@@ -378,14 +378,14 @@ mod setup_success {
             visuals: vec![value1.clone(), value2.clone()],
         };
         let mut expect = vec![10u8, 1, 2, 0, 3, 3, 3, 3];
-        expect.resize(54, 0);
+        expect.resize(56, 0);
         VisualType::write(&mut &mut expect[8..], value1, &ByteOrder::LSBFirst).unwrap();
         VisualType::write(&mut &mut expect[32..], value2, &ByteOrder::LSBFirst).unwrap();
-        let mut output = vec![0u8; 54];
+        let mut output = vec![0u8; 56];
         Depth::write(&mut &mut output[..], value, &ByteOrder::LSBFirst).unwrap();
         assert_eq!(expect[0], output[0]);
-        assert_eq!(&expect[8..], &output[8..]);
         assert_eq!(&expect[2..4], &output[2..4]);
+        assert_eq!(&expect[8..], &output[8..]);
     }
 
     #[test]

@@ -238,7 +238,7 @@ impl<V: Sized + Encoding> Writable for V {
     fn write(stream: &mut impl Write, data: V, order: &ByteOrder) -> Result<()> {
         let mut buffer = vec![0; V::SIZE];
         data.encode(order, &mut buffer[..]);
-        stream.write(&buffer[..]).map_err(|e| Error::IoError(e))?;
+        stream.write_all(&buffer[..]).map_err(|e| Error::IoError(e))?;
         Ok(())
     }
 }
