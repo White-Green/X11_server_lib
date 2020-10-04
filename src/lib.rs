@@ -4,6 +4,7 @@ use std::str::Utf8Error;
 
 pub mod read_util;
 pub mod setup;
+pub mod request;
 
 #[derive(Debug)]
 pub enum Error {
