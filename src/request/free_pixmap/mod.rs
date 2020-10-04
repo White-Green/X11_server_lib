@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct FreePixmapRequest;
 
 impl Readable for FreePixmapRequest {
@@ -17,6 +18,7 @@ impl Writable for FreePixmapRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct FreePixmapResponse;
 
 impl Readable for FreePixmapResponse {

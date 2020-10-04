@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct FreeCursorRequest;
 
 impl Readable for FreeCursorRequest {
@@ -17,6 +18,7 @@ impl Writable for FreeCursorRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct FreeCursorResponse;
 
 impl Readable for FreeCursorResponse {

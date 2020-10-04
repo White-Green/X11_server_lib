@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetKeyboardMappingRequest;
 
 impl Readable for GetKeyboardMappingRequest {
@@ -17,6 +18,7 @@ impl Writable for GetKeyboardMappingRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetKeyboardMappingResponse;
 
 impl Readable for GetKeyboardMappingResponse {

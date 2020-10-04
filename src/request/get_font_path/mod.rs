@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetFontPathRequest;
 
 impl Readable for GetFontPathRequest {
@@ -17,6 +18,7 @@ impl Writable for GetFontPathRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetFontPathResponse;
 
 impl Readable for GetFontPathResponse {

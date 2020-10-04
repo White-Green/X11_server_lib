@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetPropertyRequest;
 
 impl Readable for GetPropertyRequest {
@@ -17,6 +18,7 @@ impl Writable for GetPropertyRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetPropertyResponse;
 
 impl Readable for GetPropertyResponse {

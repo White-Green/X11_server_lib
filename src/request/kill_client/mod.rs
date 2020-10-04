@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct KillClientRequest;
 
 impl Readable for KillClientRequest {
@@ -17,6 +18,7 @@ impl Writable for KillClientRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct KillClientResponse;
 
 impl Readable for KillClientResponse {

@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ConvertSelectionRequest;
 
 impl Readable for ConvertSelectionRequest {
@@ -17,6 +18,7 @@ impl Writable for ConvertSelectionRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ConvertSelectionResponse;
 
 impl Readable for ConvertSelectionResponse {

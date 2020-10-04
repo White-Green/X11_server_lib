@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ChangeWindowAttributesRequest;
 
 impl Readable for ChangeWindowAttributesRequest {
@@ -17,6 +18,7 @@ impl Writable for ChangeWindowAttributesRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ChangeWindowAttributesResponse;
 
 impl Readable for ChangeWindowAttributesResponse {

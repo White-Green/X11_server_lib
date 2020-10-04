@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ListExtensionsRequest;
 
 impl Readable for ListExtensionsRequest {
@@ -17,6 +18,7 @@ impl Writable for ListExtensionsRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ListExtensionsResponse;
 
 impl Readable for ListExtensionsResponse {

@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct NoOperationRequest;
 
 impl Readable for NoOperationRequest {
@@ -17,6 +18,7 @@ impl Writable for NoOperationRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct NoOperationResponse;
 
 impl Readable for NoOperationResponse {

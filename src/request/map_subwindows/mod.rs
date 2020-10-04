@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct MapSubwindowsRequest;
 
 impl Readable for MapSubwindowsRequest {
@@ -17,6 +18,7 @@ impl Writable for MapSubwindowsRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct MapSubwindowsResponse;
 
 impl Readable for MapSubwindowsResponse {

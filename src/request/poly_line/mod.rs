@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct PolyLineRequest;
 
 impl Readable for PolyLineRequest {
@@ -17,6 +18,7 @@ impl Writable for PolyLineRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct PolyLineResponse;
 
 impl Readable for PolyLineResponse {

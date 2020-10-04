@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetPointerControlRequest;
 
 impl Readable for GetPointerControlRequest {
@@ -17,6 +18,7 @@ impl Writable for GetPointerControlRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetPointerControlResponse;
 
 impl Readable for GetPointerControlResponse {

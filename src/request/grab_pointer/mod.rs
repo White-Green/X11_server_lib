@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GrabPointerRequest;
 
 impl Readable for GrabPointerRequest {
@@ -17,6 +18,7 @@ impl Writable for GrabPointerRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GrabPointerResponse;
 
 impl Readable for GrabPointerResponse {

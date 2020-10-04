@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct StoreColorsRequest;
 
 impl Readable for StoreColorsRequest {
@@ -17,6 +18,7 @@ impl Writable for StoreColorsRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct StoreColorsResponse;
 
 impl Readable for StoreColorsResponse {

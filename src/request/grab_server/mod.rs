@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GrabServerRequest;
 
 impl Readable for GrabServerRequest {
@@ -17,6 +18,7 @@ impl Writable for GrabServerRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GrabServerResponse;
 
 impl Readable for GrabServerResponse {

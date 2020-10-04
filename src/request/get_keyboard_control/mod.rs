@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetKeyboardControlRequest;
 
 impl Readable for GetKeyboardControlRequest {
@@ -17,6 +18,7 @@ impl Writable for GetKeyboardControlRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetKeyboardControlResponse;
 
 impl Readable for GetKeyboardControlResponse {

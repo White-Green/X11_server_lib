@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct DestroyWindowRequest;
 
 impl Readable for DestroyWindowRequest {
@@ -17,6 +18,7 @@ impl Writable for DestroyWindowRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct DestroyWindowResponse;
 
 impl Readable for DestroyWindowResponse {

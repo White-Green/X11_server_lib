@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct FreeGCRequest;
 
 impl Readable for FreeGCRequest {
@@ -17,6 +18,7 @@ impl Writable for FreeGCRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct FreeGCResponse;
 
 impl Readable for FreeGCResponse {

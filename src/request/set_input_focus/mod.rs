@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct SetInputFocusRequest;
 
 impl Readable for SetInputFocusRequest {
@@ -17,6 +18,7 @@ impl Writable for SetInputFocusRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct SetInputFocusResponse;
 
 impl Readable for SetInputFocusResponse {

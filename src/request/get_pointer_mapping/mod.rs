@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetPointerMappingRequest;
 
 impl Readable for GetPointerMappingRequest {
@@ -17,6 +18,7 @@ impl Writable for GetPointerMappingRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetPointerMappingResponse;
 
 impl Readable for GetPointerMappingResponse {

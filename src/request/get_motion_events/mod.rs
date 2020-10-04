@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetMotionEventsRequest;
 
 impl Readable for GetMotionEventsRequest {
@@ -17,6 +18,7 @@ impl Writable for GetMotionEventsRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetMotionEventsResponse;
 
 impl Readable for GetMotionEventsResponse {

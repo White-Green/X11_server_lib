@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct SetScreenSaverRequest;
 
 impl Readable for SetScreenSaverRequest {
@@ -17,6 +18,7 @@ impl Writable for SetScreenSaverRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct SetScreenSaverResponse;
 
 impl Readable for SetScreenSaverResponse {

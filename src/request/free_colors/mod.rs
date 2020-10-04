@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct FreeColorsRequest;
 
 impl Readable for FreeColorsRequest {
@@ -17,6 +18,7 @@ impl Writable for FreeColorsRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct FreeColorsResponse;
 
 impl Readable for FreeColorsResponse {

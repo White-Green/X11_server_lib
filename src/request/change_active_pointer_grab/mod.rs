@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ChangeActivePointerGrabRequest;
 
 impl Readable for ChangeActivePointerGrabRequest {
@@ -17,6 +18,7 @@ impl Writable for ChangeActivePointerGrabRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ChangeActivePointerGrabResponse;
 
 impl Readable for ChangeActivePointerGrabResponse {

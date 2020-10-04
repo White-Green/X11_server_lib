@@ -1,8 +1,10 @@
 use std::convert::TryFrom;
-use std::io::{BufReader, BufWriter, Read};
+use std::io::{BufReader, BufWriter, Read, Write};
 use std::net::TcpListener;
 
-use xwindow::read_util::WritableWrite;
+use xwindow::read_util::{ReadableRead, WritableWrite};
+use xwindow::request::query_extension::QueryExtensionResponse;
+use xwindow::request::Request;
 use xwindow::setup::{BackingStores, BitmapFormatBitOrder, Class, ConnectionSetupFailed, ConnectionSetupResponse, ConnectionSetupSuccess, Depth, ImageByteOrder, read_setup, Screen, VisualType};
 
 fn main() {
@@ -16,7 +18,7 @@ fn main() {
         Ok((order, info)) => {
             println!("{:#?}", order);
             println!("{:#?}", info);
-            let failed_data = ConnectionSetupFailed {
+            let _failed_data = ConnectionSetupFailed {
                 protocol_major_version: 11,
                 protocol_minor_version: 0,
                 reason: String::from("こんにちは！このディスプレイはまだ使えません！ "),
@@ -72,7 +74,20 @@ fn main() {
             let response = ConnectionSetupResponse::Success(success_data);
             match writer.write_value(response, &order) {
                 Ok(()) => {
-                    println!("failed OK!");
+                    println!("OK!");
+                    if let Ok(Request::QueryExtension(req)) = reader.read_value(&order) {
+                        println!("extension {} is requested", req.name);
+                        writer.write_value(QueryExtensionResponse {
+                            sequence_number: 1,
+                            present: false,
+                            major_opcode: 0,
+                            first_event: 0,
+                            first_error: 0,
+                        }, &order).unwrap();
+                        writer.flush();
+                    } else {
+                        println!("request is not queryExtension");
+                    }
                 }
                 Err(err) => {
                     println!("{:#?}", err);

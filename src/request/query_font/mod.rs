@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct QueryFontRequest;
 
 impl Readable for QueryFontRequest {
@@ -17,6 +18,7 @@ impl Writable for QueryFontRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct QueryFontResponse;
 
 impl Readable for QueryFontResponse {

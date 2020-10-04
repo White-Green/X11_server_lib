@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct QueryKeymapRequest;
 
 impl Readable for QueryKeymapRequest {
@@ -17,6 +18,7 @@ impl Writable for QueryKeymapRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct QueryKeymapResponse;
 
 impl Readable for QueryKeymapResponse {

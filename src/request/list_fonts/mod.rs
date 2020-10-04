@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ListFontsRequest;
 
 impl Readable for ListFontsRequest {
@@ -17,6 +18,7 @@ impl Writable for ListFontsRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ListFontsResponse;
 
 impl Readable for ListFontsResponse {

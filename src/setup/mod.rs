@@ -1,6 +1,6 @@
 /// https://www.x.org/releases/current/doc/xproto/x11protocol.html#Encoding::Connection_Setup
 use std::collections::HashSet;
-use std::io::{BufRead, Read, Write};
+use std::io::{Read, Write};
 
 use crate::{Error, Result};
 use crate::read_util::{ByteOrder, read_specified_length, Readable, ReadableRead, Writable, WritableWrite};

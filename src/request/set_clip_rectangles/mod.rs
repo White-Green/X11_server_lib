@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct SetClipRectanglesRequest;
 
 impl Readable for SetClipRectanglesRequest {
@@ -17,6 +18,7 @@ impl Writable for SetClipRectanglesRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct SetClipRectanglesResponse;
 
 impl Readable for SetClipRectanglesResponse {

@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ReparentWindowRequest;
 
 impl Readable for ReparentWindowRequest {
@@ -17,6 +18,7 @@ impl Writable for ReparentWindowRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ReparentWindowResponse;
 
 impl Readable for ReparentWindowResponse {

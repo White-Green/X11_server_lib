@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct QueryColorsRequest;
 
 impl Readable for QueryColorsRequest {
@@ -17,6 +18,7 @@ impl Writable for QueryColorsRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct QueryColorsResponse;
 
 impl Readable for QueryColorsResponse {

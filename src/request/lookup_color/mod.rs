@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct LookupColorRequest;
 
 impl Readable for LookupColorRequest {
@@ -17,6 +18,7 @@ impl Writable for LookupColorRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct LookupColorResponse;
 
 impl Readable for LookupColorResponse {

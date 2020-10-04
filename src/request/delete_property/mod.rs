@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct DeletePropertyRequest;
 
 impl Readable for DeletePropertyRequest {
@@ -17,6 +18,7 @@ impl Writable for DeletePropertyRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct DeletePropertyResponse;
 
 impl Readable for DeletePropertyResponse {

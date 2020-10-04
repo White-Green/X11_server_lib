@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct SetAccessControlRequest;
 
 impl Readable for SetAccessControlRequest {
@@ -17,6 +18,7 @@ impl Writable for SetAccessControlRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct SetAccessControlResponse;
 
 impl Readable for SetAccessControlResponse {

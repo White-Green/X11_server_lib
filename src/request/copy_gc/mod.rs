@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct CopyGCRequest;
 
 impl Readable for CopyGCRequest {
@@ -17,6 +18,7 @@ impl Writable for CopyGCRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct CopyGCResponse;
 
 impl Readable for CopyGCResponse {

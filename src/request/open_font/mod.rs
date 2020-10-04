@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct OpenFontRequest;
 
 impl Readable for OpenFontRequest {
@@ -17,6 +18,7 @@ impl Writable for OpenFontRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct OpenFontResponse;
 
 impl Readable for OpenFontResponse {

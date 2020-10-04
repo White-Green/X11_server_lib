@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct QueryTextExtentsRequest;
 
 impl Readable for QueryTextExtentsRequest {
@@ -17,6 +18,7 @@ impl Writable for QueryTextExtentsRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct QueryTextExtentsResponse;
 
 impl Readable for QueryTextExtentsResponse {

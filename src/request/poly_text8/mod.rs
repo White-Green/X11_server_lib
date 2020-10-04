@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct PolyText8Request;
 
 impl Readable for PolyText8Request {
@@ -17,6 +18,7 @@ impl Writable for PolyText8Request{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct PolyText8Response;
 
 impl Readable for PolyText8Response {

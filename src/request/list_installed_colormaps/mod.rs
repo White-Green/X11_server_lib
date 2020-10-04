@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ListInstalledColormapsRequest;
 
 impl Readable for ListInstalledColormapsRequest {
@@ -17,6 +18,7 @@ impl Writable for ListInstalledColormapsRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ListInstalledColormapsResponse;
 
 impl Readable for ListInstalledColormapsResponse {

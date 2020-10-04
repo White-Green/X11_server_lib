@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ChangeHostsRequest;
 
 impl Readable for ChangeHostsRequest {
@@ -17,6 +18,7 @@ impl Writable for ChangeHostsRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ChangeHostsResponse;
 
 impl Readable for ChangeHostsResponse {

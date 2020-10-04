@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct QueryBestSizeRequest;
 
 impl Readable for QueryBestSizeRequest {
@@ -17,6 +18,7 @@ impl Writable for QueryBestSizeRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct QueryBestSizeResponse;
 
 impl Readable for QueryBestSizeResponse {

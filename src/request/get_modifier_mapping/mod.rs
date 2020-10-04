@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetModifierMappingRequest;
 
 impl Readable for GetModifierMappingRequest {
@@ -17,6 +18,7 @@ impl Writable for GetModifierMappingRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct GetModifierMappingResponse;
 
 impl Readable for GetModifierMappingResponse {

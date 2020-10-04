@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct UnmapSubwindowsRequest;
 
 impl Readable for UnmapSubwindowsRequest {
@@ -17,6 +18,7 @@ impl Writable for UnmapSubwindowsRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct UnmapSubwindowsResponse;
 
 impl Readable for UnmapSubwindowsResponse {

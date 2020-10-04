@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct AllowEventsRequest;
 
 impl Readable for AllowEventsRequest {
@@ -17,6 +18,7 @@ impl Writable for AllowEventsRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct AllowEventsResponse;
 
 impl Readable for AllowEventsResponse {

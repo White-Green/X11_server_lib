@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ImageText8Request;
 
 impl Readable for ImageText8Request {
@@ -17,6 +18,7 @@ impl Writable for ImageText8Request{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ImageText8Response;
 
 impl Readable for ImageText8Response {

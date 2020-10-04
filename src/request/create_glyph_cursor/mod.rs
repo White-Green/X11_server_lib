@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct CreateGlyphCursorRequest;
 
 impl Readable for CreateGlyphCursorRequest {
@@ -17,6 +18,7 @@ impl Writable for CreateGlyphCursorRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct CreateGlyphCursorResponse;
 
 impl Readable for CreateGlyphCursorResponse {

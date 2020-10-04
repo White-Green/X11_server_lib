@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct CopyAreaRequest;
 
 impl Readable for CopyAreaRequest {
@@ -17,6 +18,7 @@ impl Writable for CopyAreaRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct CopyAreaResponse;
 
 impl Readable for CopyAreaResponse {

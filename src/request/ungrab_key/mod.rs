@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct UngrabKeyRequest;
 
 impl Readable for UngrabKeyRequest {
@@ -17,6 +18,7 @@ impl Writable for UngrabKeyRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct UngrabKeyResponse;
 
 impl Readable for UngrabKeyResponse {

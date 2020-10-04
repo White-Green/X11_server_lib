@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct SetSelectionOwnerRequest;
 
 impl Readable for SetSelectionOwnerRequest {
@@ -17,6 +18,7 @@ impl Writable for SetSelectionOwnerRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct SetSelectionOwnerResponse;
 
 impl Readable for SetSelectionOwnerResponse {

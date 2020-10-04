@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct InternAtomRequest;
 
 impl Readable for InternAtomRequest {
@@ -17,6 +18,7 @@ impl Writable for InternAtomRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct InternAtomResponse;
 
 impl Readable for InternAtomResponse {

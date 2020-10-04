@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct SetPointerMappingRequest;
 
 impl Readable for SetPointerMappingRequest {
@@ -17,6 +18,7 @@ impl Writable for SetPointerMappingRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct SetPointerMappingResponse;
 
 impl Readable for SetPointerMappingResponse {

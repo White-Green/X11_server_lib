@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct SetCloseDownModeRequest;
 
 impl Readable for SetCloseDownModeRequest {
@@ -17,6 +18,7 @@ impl Writable for SetCloseDownModeRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct SetCloseDownModeResponse;
 
 impl Readable for SetCloseDownModeResponse {

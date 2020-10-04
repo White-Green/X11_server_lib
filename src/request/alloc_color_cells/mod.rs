@@ -3,6 +3,7 @@ use std::io::{Read, Write};
 use crate::read_util::{ByteOrder, Readable, Writable};
 use crate::Result;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct AllocColorCellsRequest;
 
 impl Readable for AllocColorCellsRequest {
@@ -17,6 +18,7 @@ impl Writable for AllocColorCellsRequest{
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct AllocColorCellsResponse;
 
 impl Readable for AllocColorCellsResponse {
