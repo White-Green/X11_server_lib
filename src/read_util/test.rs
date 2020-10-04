@@ -2,12 +2,13 @@
 
 mod read_specified_length {
     use crate::read_util::read_specified_length;
+    use std::io::BufReader;
 
     #[test]
     fn read_specified_length_test() -> Result<(), ()> {
         let input = vec![0u8, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
         let mut buffer = [0; 16];
-        let len = read_specified_length(&mut &input[..], &mut buffer[..], 10).map_err(|_| ())?;
+        let len = read_specified_length(&mut BufReader::new(&input[..]), &mut buffer[..], 10).map_err(|_| ())?;
         assert_eq!(len, 10);
         assert_eq!(buffer, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0]);
         Ok(())
@@ -17,7 +18,7 @@ mod read_specified_length {
     fn read_specified_length_test_1() -> Result<(), ()> {
         let input = vec![0u8, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
         let mut buffer = [0; 10];
-        let len = read_specified_length(&mut &input[..], &mut buffer, 12).map_err(|_| ())?;
+        let len = read_specified_length(&mut BufReader::new(&input[..]), &mut buffer, 12).map_err(|_| ())?;
         assert_eq!(len, 10);
         Ok(())
     }

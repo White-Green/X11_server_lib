@@ -1,17 +1,18 @@
 use std::convert::TryFrom;
-use std::io::Read;
+use std::io::{BufReader, BufWriter, Read};
 use std::net::TcpListener;
 
-use xwindow::Error;
 use xwindow::read_util::WritableWrite;
-use xwindow::setup::{BackingStores, BitmapFormatBitOrder, Class, ConnectionSetupFailed, ConnectionSetupResponse, ConnectionSetupSuccess, Depth, Format, ImageByteOrder, read_setup, Screen, VisualType};
+use xwindow::setup::{BackingStores, BitmapFormatBitOrder, Class, ConnectionSetupFailed, ConnectionSetupResponse, ConnectionSetupSuccess, Depth, ImageByteOrder, read_setup, Screen, VisualType};
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:6000").unwrap();
-    let (mut stream, addr) = listener.accept().unwrap();
+    let (stream, addr) = listener.accept().unwrap();
+    let mut reader = BufReader::new(stream.try_clone().unwrap());
+    let mut writer = BufWriter::new(stream);
     println!("{}", addr);
     let mut buffer = [0; 1024];
-    match read_setup(&mut stream, &mut buffer) {
+    match read_setup(&mut reader, &mut buffer) {
         Ok((order, info)) => {
             println!("{:#?}", order);
             println!("{:#?}", info);
@@ -69,7 +70,7 @@ fn main() {
                 }],
             };
             let response = ConnectionSetupResponse::Success(success_data);
-            match stream.write_value(response, &order) {
+            match writer.write_value(response, &order) {
                 Ok(()) => {
                     println!("failed OK!");
                 }
@@ -83,7 +84,7 @@ fn main() {
         }
     };
     loop {
-        let length = stream.read(&mut buffer).unwrap();
+        let length = reader.read(&mut buffer).unwrap();
         if length == 0 {
             println!("closed");
             return;

@@ -6,13 +6,13 @@ use crate::Result;
 pub struct GetModifierMappingRequest;
 
 impl Readable for GetModifierMappingRequest {
-    fn read(_stream: &mut impl Read, _order: &ByteOrder) -> Result<Self> {
+    fn read(_stream: &mut std::io::BufReader<impl Read>, _order: &ByteOrder) -> Result<Self> {
         unimplemented!()
     }
 }
 
 impl Writable for GetModifierMappingRequest{
-    fn write(_stream: &mut impl Write, _data: Self, _order: &ByteOrder) -> Result<()> {
+    fn write(_stream: &mut std::io::BufWriter<impl Write>, _data: Self, _order: &ByteOrder) -> Result<()> {
         unimplemented!()
     }
 }
@@ -20,13 +20,13 @@ impl Writable for GetModifierMappingRequest{
 pub struct GetModifierMappingResponse;
 
 impl Readable for GetModifierMappingResponse {
-    fn read(_stream: &mut impl Read, _order: &ByteOrder) -> Result<Self> {
+    fn read(_stream: &mut std::io::BufReader<impl Read>, _order: &ByteOrder) -> Result<Self> {
         unimplemented!()
     }
 }
 
 impl Writable for GetModifierMappingResponse{
-    fn write(_stream: &mut impl Write, _data: Self, _order: &ByteOrder) -> Result<()> {
+    fn write(_stream: &mut std::io::BufWriter<impl Write>, _data: Self, _order: &ByteOrder) -> Result<()> {
         unimplemented!()
     }
 }

@@ -249,7 +249,7 @@ pub enum Request {
 }
 
 impl Readable for Request {
-    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+    fn read(stream: &mut std::io::BufReader<impl Read>, order: &ByteOrder) -> Result<Self> {
         let opcode = stream.read_value::<u8>(order)?;
         match opcode {
             1 => Ok(Request::CreateWindow(stream.read_value(order)?)),
@@ -378,7 +378,7 @@ impl Readable for Request {
 }
 
 impl Writable for Request {
-    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+    fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, order: &ByteOrder) -> Result<()> {
         match data {
             Request::CreateWindow(data) => stream.write_value(data, order),
             Request::ChangeWindowAttributes(data) => stream.write_value(data, order),

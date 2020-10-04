@@ -1,10 +1,10 @@
-use std::io::{Read, Write};
+use std::io::{BufReader, BufWriter, Read, Write};
 
 use crate::{Error, Result};
 
 mod test;
 
-pub(crate) fn read_specified_length(stream: &mut impl Read, buffer: &mut [u8], length: usize) -> Result<usize> {
+pub(crate) fn read_specified_length(stream: &mut BufReader<impl Read>, buffer: &mut [u8], length: usize) -> Result<usize> {
     let length = length.min(buffer.len());
     let mut read_length = 0;
     while read_length < length {
@@ -219,15 +219,15 @@ impl Encoding for i32 {
 }
 
 pub trait Readable: Sized {
-    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self>;
+    fn read(stream: &mut BufReader<impl Read>, order: &ByteOrder) -> Result<Self>;
 }
 
 pub trait Writable: Sized {
-    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()>;
+    fn write(stream: &mut BufWriter<impl Write>, data: Self, order: &ByteOrder) -> Result<()>;
 }
 
 impl<V: Sized + Encoding> Readable for V {
-    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+    fn read(stream: &mut BufReader<impl Read>, order: &ByteOrder) -> Result<Self> {
         let mut buffer = vec![0; V::SIZE];
         read_specified_length(stream, &mut buffer[..], V::SIZE)?;
         Ok(V::decode(order, &buffer[..]))
@@ -235,7 +235,7 @@ impl<V: Sized + Encoding> Readable for V {
 }
 
 impl<V: Sized + Encoding> Writable for V {
-    fn write(stream: &mut impl Write, data: V, order: &ByteOrder) -> Result<()> {
+    fn write(stream: &mut BufWriter<impl Write>, data: V, order: &ByteOrder) -> Result<()> {
         let mut buffer = vec![0; V::SIZE];
         data.encode(order, &mut buffer[..]);
         stream.write_all(&buffer[..]).map_err(|e| Error::IoError(e))?;
@@ -251,13 +251,13 @@ pub trait WritableWrite {
     fn write_value<T: Writable>(&mut self, data: T, order: &ByteOrder) -> Result<()>;
 }
 
-impl<S: Read> ReadableRead for S {
+impl<S: Read> ReadableRead for BufReader<S> {
     fn read_value<T: Readable>(&mut self, order: &ByteOrder) -> Result<T> {
         T::read(self, order)
     }
 }
 
-impl<S: Write> WritableWrite for S {
+impl<S: Write> WritableWrite for BufWriter<S> {
     fn write_value<T: Writable>(&mut self, data: T, order: &ByteOrder) -> Result<()> {
         T::write(self, data, order)
     }

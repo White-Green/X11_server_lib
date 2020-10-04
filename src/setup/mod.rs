@@ -1,6 +1,6 @@
 /// https://www.x.org/releases/current/doc/xproto/x11protocol.html#Encoding::Connection_Setup
 use std::collections::HashSet;
-use std::io::{Read, Write};
+use std::io::{BufRead, Read, Write};
 
 use crate::{Error, Result};
 use crate::read_util::{ByteOrder, read_specified_length, Readable, ReadableRead, Writable, WritableWrite};
@@ -15,7 +15,7 @@ pub struct ConnectionSetupInformation {
     pub authorization_protocol_data: String,
 }
 
-pub fn read_setup(stream: &mut impl Read, buffer: &mut [u8]) -> Result<(ByteOrder, ConnectionSetupInformation)> {
+pub fn read_setup(stream: &mut std::io::BufReader<impl Read>, buffer: &mut [u8]) -> Result<(ByteOrder, ConnectionSetupInformation)> {
     assert!(buffer.len() >= 10);
     read_specified_length(stream, buffer, 2)?;
     let order = match buffer[0] {
@@ -63,7 +63,7 @@ pub fn read_setup(stream: &mut impl Read, buffer: &mut [u8]) -> Result<(ByteOrde
     Ok((order, information))
 }
 
-pub fn write_setup(stream: &mut impl Write, buffer: &mut [u8], order: &ByteOrder, info: ConnectionSetupInformation) -> Result<()> {
+pub fn write_setup(stream: &mut std::io::BufWriter<impl Write>, buffer: &mut [u8], order: &ByteOrder, info: ConnectionSetupInformation) -> Result<()> {
     assert!(buffer.len() >= 12);
     buffer[0] =
         match order {
@@ -83,6 +83,7 @@ pub fn write_setup(stream: &mut impl Write, buffer: &mut [u8], order: &ByteOrder
     stream.write_all(&buffer[..((!name_len).wrapping_add(1)) & 0b11]).map_err(|e| Error::IoError(e))?;
     stream.write_all(info.authorization_protocol_data.as_bytes()).map_err(|e| Error::IoError(e))?;
     stream.write_all(&buffer[..((!data_len).wrapping_add(1)) & 0b11]).map_err(|e| Error::IoError(e))?;
+    stream.flush().map_err(|e| Error::IoError(e))?;
     Ok(())
 }
 
@@ -94,7 +95,7 @@ pub struct ConnectionSetupFailed {
 }
 
 impl Readable for ConnectionSetupFailed {
-    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {//最初のopcodeは読まない
+    fn read(stream: &mut std::io::BufReader<impl Read>, order: &ByteOrder) -> Result<Self> {//最初のopcodeは読まない
         let n = stream.read_value::<u8>(order)? as usize;
         let protocol_major_version = stream.read_value(order)?;
         let protocol_minor_version = stream.read_value(order)?;
@@ -112,7 +113,7 @@ impl Readable for ConnectionSetupFailed {
 }
 
 impl Writable for ConnectionSetupFailed {
-    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {//最初のopcodeも送る
+    fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, order: &ByteOrder) -> Result<()> {//最初のopcodeも送る
         stream.write_value(0u8, order)?;
         stream.write_value(data.reason.len() as u8, order)?;
         stream.write_value(data.protocol_major_version, order)?;
@@ -123,6 +124,7 @@ impl Writable for ConnectionSetupFailed {
         stream.write_all(data.reason.as_bytes()).map_err(|e| Error::IoError(e))?;
         let buf = vec![0; q as usize];
         stream.write_all(&buf[..]).map_err(|e| Error::IoError(e))?;
+        stream.flush().map_err(|e| Error::IoError(e))?;
         Ok(())
     }
 }
@@ -133,7 +135,7 @@ pub struct ConnectionSetupAuthenticate {
 }
 
 impl Readable for ConnectionSetupAuthenticate {
-    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {//最初のopcodeは読まない
+    fn read(stream: &mut std::io::BufReader<impl Read>, order: &ByteOrder) -> Result<Self> {//最初のopcodeは読まない
         read_specified_length(stream, &mut [0; 5], 5)?;
         let len = stream.read_value::<u16>(order)? as usize;
         let mut len = len << 2;
@@ -149,7 +151,7 @@ impl Readable for ConnectionSetupAuthenticate {
 }
 
 impl Writable for ConnectionSetupAuthenticate {
-    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {//最初のopcodeも送る
+    fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, order: &ByteOrder) -> Result<()> {//最初のopcodeも送る
         stream.write_value(2u8, order)?;
         stream.write_all(&[0; 5]).map_err(|e| Error::IoError(e))?;
         let len = data.reason.len() as u16;
@@ -159,6 +161,7 @@ impl Writable for ConnectionSetupAuthenticate {
         for _ in 0..q {
             stream.write_value(0u8, order)?;
         }
+        stream.flush().map_err(|e| Error::IoError(e))?;
         Ok(())
     }
 }
@@ -170,7 +173,7 @@ pub enum ImageByteOrder {
 }
 
 impl Readable for ImageByteOrder {
-    fn read(stream: &mut impl Read, _order: &ByteOrder) -> Result<Self> {
+    fn read(stream: &mut std::io::BufReader<impl Read>, _order: &ByteOrder) -> Result<Self> {
         let mut buffer = [0];
         read_specified_length(stream, &mut buffer[..], 1)?;
         match buffer[0] {
@@ -182,7 +185,7 @@ impl Readable for ImageByteOrder {
 }
 
 impl Writable for ImageByteOrder {
-    fn write(stream: &mut impl Write, data: Self, _order: &ByteOrder) -> Result<()> {
+    fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, _order: &ByteOrder) -> Result<()> {
         let buffer = [
             match data {
                 ImageByteOrder::LSBFirst => { 0 }
@@ -204,7 +207,7 @@ pub enum BitmapFormatBitOrder {
 }
 
 impl Readable for BitmapFormatBitOrder {
-    fn read(stream: &mut impl Read, _order: &ByteOrder) -> Result<Self> {
+    fn read(stream: &mut std::io::BufReader<impl Read>, _order: &ByteOrder) -> Result<Self> {
         let mut buffer = [0];
         read_specified_length(stream, &mut buffer[..], 1)?;
         match buffer[0] {
@@ -216,7 +219,7 @@ impl Readable for BitmapFormatBitOrder {
 }
 
 impl Writable for BitmapFormatBitOrder {
-    fn write(stream: &mut impl Write, data: Self, _order: &ByteOrder) -> Result<()> {
+    fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, _order: &ByteOrder) -> Result<()> {
         let buffer = [
             match data {
                 BitmapFormatBitOrder::LeastSignificant => { 0 }
@@ -239,7 +242,7 @@ pub struct Format {
 }
 
 impl Readable for Format {
-    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+    fn read(stream: &mut std::io::BufReader<impl Read>, order: &ByteOrder) -> Result<Self> {
         let depth = stream.read_value(order)?;
         let bits_per_pixel = stream.read_value(order)?;
         let scanline_pad = stream.read_value(order)?;
@@ -253,7 +256,7 @@ impl Readable for Format {
 }
 
 impl Writable for Format {
-    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+    fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, order: &ByteOrder) -> Result<()> {
         stream.write_value(data.depth, order)?;
         stream.write_value(data.bits_per_pixel, order)?;
         stream.write_value(data.scanline_pad, order)?;
@@ -270,7 +273,7 @@ pub enum BackingStores {
 }
 
 impl Readable for BackingStores {
-    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+    fn read(stream: &mut std::io::BufReader<impl Read>, order: &ByteOrder) -> Result<Self> {
         match stream.read_value::<u8>(order)? {
             0 => Ok(BackingStores::Never),
             1 => Ok(BackingStores::WhenMapped),
@@ -281,7 +284,7 @@ impl Readable for BackingStores {
 }
 
 impl Writable for BackingStores {
-    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+    fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, order: &ByteOrder) -> Result<()> {
         let value = match data {
             BackingStores::Never => 0,
             BackingStores::WhenMapped => 1,
@@ -302,7 +305,7 @@ pub enum Class {
 }
 
 impl Readable for Class {
-    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+    fn read(stream: &mut std::io::BufReader<impl Read>, order: &ByteOrder) -> Result<Self> {
         match stream.read_value::<u8>(order)? {
             0 => Ok(Class::StaticGray),
             1 => Ok(Class::GrayScale),
@@ -316,7 +319,7 @@ impl Readable for Class {
 }
 
 impl Writable for Class {
-    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+    fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, order: &ByteOrder) -> Result<()> {
         let value = match data {
             Class::StaticGray => 0,
             Class::GrayScale => 1,
@@ -341,7 +344,7 @@ pub struct VisualType {
 }
 
 impl Readable for VisualType {
-    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+    fn read(stream: &mut std::io::BufReader<impl Read>, order: &ByteOrder) -> Result<Self> {
         let visual_id = stream.read_value(order)?;
         let class = stream.read_value(order)?;
         let bits_per_rgb_value = stream.read_value(order)?;
@@ -363,7 +366,7 @@ impl Readable for VisualType {
 }
 
 impl Writable for VisualType {
-    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+    fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, order: &ByteOrder) -> Result<()> {
         stream.write_value(data.visual_id, order)?;
         stream.write_value(data.class, order)?;
         stream.write_value(data.bits_per_rgb_value, order)?;
@@ -383,7 +386,7 @@ pub struct Depth {
 }
 
 impl Readable for Depth {
-    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+    fn read(stream: &mut std::io::BufReader<impl Read>, order: &ByteOrder) -> Result<Self> {
         let depth = stream.read_value(order)?;
         read_specified_length(stream, &mut [0; 1], 1)?;
         let n = stream.read_value::<u16>(order)? as usize;
@@ -400,7 +403,7 @@ impl Readable for Depth {
 }
 
 impl Writable for Depth {
-    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+    fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, order: &ByteOrder) -> Result<()> {
         stream.write_value(data.depth, order)?;
         stream.write_all(&[0; 1]).map_err(|e| Error::IoError(e))?;
         assert!(data.visuals.len() <= u16::MAX as usize);
@@ -444,7 +447,7 @@ pub enum Event {
 }
 
 impl Readable for HashSet<Event> {
-    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+    fn read(stream: &mut std::io::BufReader<impl Read>, order: &ByteOrder) -> Result<Self> {
         const VALUES: [Event; 25] = [
             Event::KeyPress,
             Event::KeyRelease,
@@ -492,7 +495,7 @@ impl Readable for HashSet<Event> {
 }
 
 impl Writable for HashSet<Event> {
-    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+    fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, order: &ByteOrder) -> Result<()> {
         const VALUES: [Event; 25] = [
             Event::KeyPress,
             Event::KeyRelease,
@@ -552,7 +555,7 @@ pub struct Screen {
 }
 
 impl Readable for Screen {
-    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+    fn read(stream: &mut std::io::BufReader<impl Read>, order: &ByteOrder) -> Result<Self> {
         let root = stream.read_value(order)?;
         let default_colormap = stream.read_value(order)?;
         let white_pixel = stream.read_value(order)?;
@@ -595,7 +598,7 @@ impl Readable for Screen {
 }
 
 impl Writable for Screen {
-    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+    fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, order: &ByteOrder) -> Result<()> {
         stream.write_value(data.root, order)?;
         stream.write_value(data.default_colormap, order)?;
         stream.write_value(data.white_pixel, order)?;
@@ -641,7 +644,7 @@ pub struct ConnectionSetupSuccess {
 }
 
 impl Readable for ConnectionSetupSuccess {
-    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
+    fn read(stream: &mut std::io::BufReader<impl Read>, order: &ByteOrder) -> Result<Self> {
         read_specified_length(stream, &mut [0; 1], 1)?;
         let protocol_major_version = stream.read_value(order)?;
         let protocol_minor_version = stream.read_value(order)?;
@@ -695,7 +698,7 @@ impl Readable for ConnectionSetupSuccess {
 }
 
 impl Writable for ConnectionSetupSuccess {
-    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+    fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, order: &ByteOrder) -> Result<()> {
         stream.write_value(1u8, order)?;
         stream.write_all(&[0; 1]).map_err(|e| Error::IoError(e))?;
         stream.write_value(data.protocol_major_version, order)?;
@@ -733,6 +736,7 @@ impl Writable for ConnectionSetupSuccess {
         for screen in data.roots {
             stream.write_value(screen, order)?;
         }
+        stream.flush().map_err(|e| Error::IoError(e))?;
         Ok(())
     }
 }
@@ -744,8 +748,8 @@ pub enum ConnectionSetupResponse {
 }
 
 impl Readable for ConnectionSetupResponse {
-    fn read(stream: &mut impl Read, order: &ByteOrder) -> Result<Self> {
-        match stream.read_value(order)? {
+    fn read(stream: &mut std::io::BufReader<impl Read>, order: &ByteOrder) -> Result<Self> {
+        match stream.read_value::<u8>(order)? {
             0 => Ok(Self::Failed(stream.read_value(order)?)),
             1 => Ok(Self::Success(stream.read_value(order)?)),
             2 => Ok(Self::Authenticate(stream.read_value(order)?)),
@@ -755,7 +759,7 @@ impl Readable for ConnectionSetupResponse {
 }
 
 impl Writable for ConnectionSetupResponse {
-    fn write(stream: &mut impl Write, data: Self, order: &ByteOrder) -> Result<()> {
+    fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, order: &ByteOrder) -> Result<()> {
         match data {
             ConnectionSetupResponse::Failed(failed) => stream.write_value(failed, order),
             ConnectionSetupResponse::Authenticate(authenticate) => stream.write_value(authenticate, order),

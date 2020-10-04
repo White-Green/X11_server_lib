@@ -6,13 +6,13 @@ use crate::Result;
 pub struct NoOperationRequest;
 
 impl Readable for NoOperationRequest {
-    fn read(_stream: &mut impl Read, _order: &ByteOrder) -> Result<Self> {
+    fn read(_stream: &mut std::io::BufReader<impl Read>, _order: &ByteOrder) -> Result<Self> {
         unimplemented!()
     }
 }
 
 impl Writable for NoOperationRequest{
-    fn write(_stream: &mut impl Write, _data: Self, _order: &ByteOrder) -> Result<()> {
+    fn write(_stream: &mut std::io::BufWriter<impl Write>, _data: Self, _order: &ByteOrder) -> Result<()> {
         unimplemented!()
     }
 }
@@ -20,13 +20,13 @@ impl Writable for NoOperationRequest{
 pub struct NoOperationResponse;
 
 impl Readable for NoOperationResponse {
-    fn read(_stream: &mut impl Read, _order: &ByteOrder) -> Result<Self> {
+    fn read(_stream: &mut std::io::BufReader<impl Read>, _order: &ByteOrder) -> Result<Self> {
         unimplemented!()
     }
 }
 
 impl Writable for NoOperationResponse{
-    fn write(_stream: &mut impl Write, _data: Self, _order: &ByteOrder) -> Result<()> {
+    fn write(_stream: &mut std::io::BufWriter<impl Write>, _data: Self, _order: &ByteOrder) -> Result<()> {
         unimplemented!()
     }
 }

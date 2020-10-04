@@ -6,13 +6,13 @@ use crate::Result;
 pub struct InternAtomRequest;
 
 impl Readable for InternAtomRequest {
-    fn read(_stream: &mut impl Read, _order: &ByteOrder) -> Result<Self> {
+    fn read(_stream: &mut std::io::BufReader<impl Read>, _order: &ByteOrder) -> Result<Self> {
         unimplemented!()
     }
 }
 
 impl Writable for InternAtomRequest{
-    fn write(_stream: &mut impl Write, _data: Self, _order: &ByteOrder) -> Result<()> {
+    fn write(_stream: &mut std::io::BufWriter<impl Write>, _data: Self, _order: &ByteOrder) -> Result<()> {
         unimplemented!()
     }
 }
@@ -20,13 +20,13 @@ impl Writable for InternAtomRequest{
 pub struct InternAtomResponse;
 
 impl Readable for InternAtomResponse {
-    fn read(_stream: &mut impl Read, _order: &ByteOrder) -> Result<Self> {
+    fn read(_stream: &mut std::io::BufReader<impl Read>, _order: &ByteOrder) -> Result<Self> {
         unimplemented!()
     }
 }
 
 impl Writable for InternAtomResponse{
-    fn write(_stream: &mut impl Write, _data: Self, _order: &ByteOrder) -> Result<()> {
+    fn write(_stream: &mut std::io::BufWriter<impl Write>, _data: Self, _order: &ByteOrder) -> Result<()> {
         unimplemented!()
     }
 }
