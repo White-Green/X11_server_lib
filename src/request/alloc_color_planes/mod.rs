@@ -1,0 +1,32 @@
+use std::io::{Read, Write};
+
+use crate::read_util::{ByteOrder, Readable, Writable};
+use crate::Result;
+
+pub struct AllocColorPlanesRequest;
+
+impl Readable for AllocColorPlanesRequest {
+    fn read(_stream: &mut impl Read, _order: &ByteOrder) -> Result<Self> {
+        unimplemented!()
+    }
+}
+
+impl Writable for AllocColorPlanesRequest{
+    fn write(_stream: &mut impl Write, _data: Self, _order: &ByteOrder) -> Result<()> {
+        unimplemented!()
+    }
+}
+
+pub struct AllocColorPlanesResponse;
+
+impl Readable for AllocColorPlanesResponse {
+    fn read(_stream: &mut impl Read, _order: &ByteOrder) -> Result<Self> {
+        unimplemented!()
+    }
+}
+
+impl Writable for AllocColorPlanesResponse{
+    fn write(_stream: &mut impl Write, _data: Self, _order: &ByteOrder) -> Result<()> {
+        unimplemented!()
+    }
+}
