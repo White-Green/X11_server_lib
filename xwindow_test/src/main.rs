@@ -119,5 +119,6 @@ fn main() {
         }
         println!("{}", hex);
         println!("{}", asc);
+        //TODO:次は 55:CreateDC,20:GetProperty
     }
 }
