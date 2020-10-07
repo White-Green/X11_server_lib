@@ -4,6 +4,8 @@ use std::io::{BufReader, BufWriter, Read, Write};
 use crate::{Error, Result};
 use crate::read_util::{ByteOrder, read_specified_length, Readable, ReadableRead, Writable, WritableWrite};
 
+mod test;
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum CreateGCValueFunction {
     Clear,
@@ -231,7 +233,7 @@ impl Readable for CreateGCValueSubwindowMode {
         match stream.read_value::<u8>(order)? {
             0 => Ok(Self::ClipByChildren),
             1 => Ok(Self::IncludeInferiors),
-            _ => Err(Error::InvalidValue("CreateGCValueFillRule")),
+            _ => Err(Error::InvalidValue("CreateGCValueSubwindowMode")),
         }
     }
 }
@@ -257,7 +259,7 @@ impl Readable for CreateGCValueArcMode {
         match stream.read_value::<u8>(order)? {
             0 => Ok(Self::Chord),
             1 => Ok(Self::PieSlice),
-            _ => Err(Error::InvalidValue("CreateGCValueFillRule")),
+            _ => Err(Error::InvalidValue("CreateGCValueArcMode")),
         }
     }
 }
@@ -480,7 +482,7 @@ impl Readable for CreateGCRequest {
 
 impl Writable for CreateGCRequest {
     fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, order: &ByteOrder) -> Result<()> {
-        let mut buffer = [0; 50];
+        let mut buffer = [0; 52];
         let mut value_writer = BufWriter::new(&mut buffer[..]);
         let default_value = CreateGCValue::default();
         let mut written_size = 0;
@@ -605,9 +607,10 @@ impl Writable for CreateGCRequest {
         let written_size = (written_size + 3) & !3;
         stream.write_value::<u8>(55, order)?;
         stream.write_all(&[0]).map_err(|e| Error::IoError(e))?;
-        stream.write_value((written_size >> 2) as u16, order)?;
+        stream.write_value((written_size >> 2) as u16 + 4, order)?;
         stream.write_value(data.cid, order)?;
         stream.write_value(data.drawable, order)?;
+        stream.write_value(written, order)?;
         stream.write_all(&buffer[..written_size]).map_err(|e| Error::IoError(e))?;
         Ok(())
     }
