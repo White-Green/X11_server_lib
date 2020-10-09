@@ -1,7 +1,7 @@
 use std::io::{Read, Write};
 
+use crate::{Error, Result};
 use crate::read_util::{ByteOrder, read_specified_length, Readable, ReadableRead, Writable, WritableWrite};
-use crate::Result;
 
 mod test;
 
@@ -53,16 +53,53 @@ impl Writable for GetPropertyRequest {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct GetPropertyResponse;
+pub struct GetPropertyResponse {
+    format: u8,
+    sequence_number: u16,
+    type_: Option<u32>,
+    bytes_after: u32,
+    length_of_value_in_format_units: u32,
+    value: Vec<u8>,
+}
 
 impl Readable for GetPropertyResponse {
-    fn read(_stream: &mut std::io::BufReader<impl Read>, _order: &ByteOrder) -> Result<Self> {
-        unimplemented!()
+    fn read(stream: &mut std::io::BufReader<impl Read>, order: &ByteOrder) -> Result<Self> {
+        read_specified_length(stream, &mut [0], 1)?;
+        let format = stream.read_value(order)?;
+        let sequence_number = stream.read_value(order)?;
+        let len = stream.read_value::<u32>(order)? as usize;
+        let type_ = match stream.read_value(order)? {
+            0 => None,
+            other => Some(other),
+        };
+        let bytes_after = stream.read_value(order)?;
+        let length_of_value_in_format_units = stream.read_value(order)?;
+        read_specified_length(stream, &mut [0; 12], 12)?;
+        let mut value = vec![0; len];
+        read_specified_length(stream, &mut value, len)?;
+        Ok(GetPropertyResponse {
+            format,
+            sequence_number,
+            type_,
+            bytes_after,
+            length_of_value_in_format_units,
+            value,
+        })
     }
 }
 
 impl Writable for GetPropertyResponse {
-    fn write(_stream: &mut std::io::BufWriter<impl Write>, _data: Self, _order: &ByteOrder) -> Result<()> {
-        unimplemented!()
+    fn write(stream: &mut std::io::BufWriter<impl Write>, data: Self, order: &ByteOrder) -> Result<()> {
+        stream.write_value::<u8>(1, order)?;
+        stream.write_value(data.format, order)?;
+        stream.write_value(data.sequence_number, order)?;
+        stream.write_value::<u32>(((data.value.len() + 3) & !3) as u32, order)?;
+        stream.write_value(data.type_.unwrap_or(0), order)?;
+        stream.write_value(data.bytes_after, order)?;
+        stream.write_value(data.length_of_value_in_format_units, order)?;
+        stream.write_all(&[0; 12]).map_err(|e| Error::IoError(e))?;
+        stream.write_all(&data.value[..]).map_err(|e| Error::IoError(e))?;
+        stream.write_all(&[0; 4][..(!data.value.len()).wrapping_add(1) & 3]).map_err(|e| Error::IoError(e))?;
+        Ok(())
     }
 }
