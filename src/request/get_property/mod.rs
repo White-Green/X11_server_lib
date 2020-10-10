@@ -67,7 +67,7 @@ impl Readable for GetPropertyResponse {
         read_specified_length(stream, &mut [0], 1)?;
         let format = stream.read_value(order)?;
         let sequence_number = stream.read_value(order)?;
-        let len = stream.read_value::<u32>(order)? as usize;
+        let len = (stream.read_value::<u32>(order)? as usize) << 2;
         let type_ = match stream.read_value(order)? {
             0 => None,
             other => Some(other),
@@ -75,8 +75,19 @@ impl Readable for GetPropertyResponse {
         let bytes_after = stream.read_value(order)?;
         let length_of_value_in_format_units = stream.read_value(order)?;
         read_specified_length(stream, &mut [0; 12], 12)?;
+        let value_len =
+            if (length_of_value_in_format_units << 2) as usize <= len {
+                (length_of_value_in_format_units << 2) as usize
+            } else if (length_of_value_in_format_units << 1) as usize <= len {
+                (length_of_value_in_format_units << 1) as usize
+            } else {
+                length_of_value_in_format_units as usize
+            };
         let mut value = vec![0; len];
         read_specified_length(stream, &mut value, len)?;
+        for _ in value_len..len {
+            value.pop();
+        }
         Ok(GetPropertyResponse {
             format,
             sequence_number,
@@ -93,7 +104,7 @@ impl Writable for GetPropertyResponse {
         stream.write_value::<u8>(1, order)?;
         stream.write_value(data.format, order)?;
         stream.write_value(data.sequence_number, order)?;
-        stream.write_value::<u32>(((data.value.len() + 3) & !3) as u32, order)?;
+        stream.write_value::<u32>((((data.value.len() + 3) & !3) >> 2) as u32, order)?;
         stream.write_value(data.type_.unwrap_or(0), order)?;
         stream.write_value(data.bytes_after, order)?;
         stream.write_value(data.length_of_value_in_format_units, order)?;
