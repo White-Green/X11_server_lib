@@ -6,6 +6,7 @@ use xwindow::read_util::{ReadableRead, WritableWrite};
 use xwindow::request::query_extension::QueryExtensionResponse;
 use xwindow::request::Request;
 use xwindow::setup::{BackingStores, BitmapFormatBitOrder, Class, ConnectionSetupFailed, ConnectionSetupResponse, ConnectionSetupSuccess, Depth, ImageByteOrder, read_setup, Screen, VisualType};
+use xwindow::request::get_property::GetPropertyResponse;
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:6000").unwrap();
@@ -75,6 +76,38 @@ fn main() {
             match writer.write_value(response, &order) {
                 Ok(()) => {
                     println!("OK!");
+                    if let Ok(Request::QueryExtension(req)) = reader.read_value(&order) {
+                        println!("extension {} is requested", req.name);
+                        writer.write_value(QueryExtensionResponse {
+                            sequence_number: 1,
+                            present: false,
+                            major_opcode: 0,
+                            first_event: 0,
+                            first_error: 0,
+                        }, &order).unwrap();
+                        writer.flush();
+                    } else {
+                        println!("request is not queryExtension");
+                    }
+                    if let Ok(Request::CreateGC(req)) = reader.read_value(&order) {
+                        println!("{:#?}", req);
+                    } else {
+                        println!("request is not createGC");
+                    }
+                    if let Ok(Request::GetProperty(req)) = reader.read_value(&order) {
+                        println!("{:#?}", req);
+                        writer.write_value(GetPropertyResponse {
+                            format: 0,
+                            sequence_number: 3,
+                            type_: None,
+                            bytes_after: 0,
+                            length_of_value_in_format_units: 0,
+                            value: vec![]
+                        }, &order).unwrap();
+                        writer.flush();
+                    } else {
+                        println!("request is not getProperty");
+                    }
                     if let Ok(Request::QueryExtension(req)) = reader.read_value(&order) {
                         println!("extension {} is requested", req.name);
                         writer.write_value(QueryExtensionResponse {

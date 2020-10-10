@@ -7,12 +7,12 @@ mod test;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct GetPropertyRequest {
-    delete: bool,
-    window: u32,
-    property: u32,
-    type_: Option<u32>,
-    long_offset: u32,
-    long_length: u32,
+    pub delete: bool,
+    pub window: u32,
+    pub property: u32,
+    pub type_: Option<u32>,
+    pub long_offset: u32,
+    pub long_length: u32,
 }
 
 impl Readable for GetPropertyRequest {
@@ -54,12 +54,12 @@ impl Writable for GetPropertyRequest {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct GetPropertyResponse {
-    format: u8,
-    sequence_number: u16,
-    type_: Option<u32>,
-    bytes_after: u32,
-    length_of_value_in_format_units: u32,
-    value: Vec<u8>,
+    pub format: u8,
+    pub sequence_number: u16,
+    pub type_: Option<u32>,
+    pub bytes_after: u32,
+    pub length_of_value_in_format_units: u32,
+    pub value: Vec<u8>,
 }
 
 impl Readable for GetPropertyResponse {
