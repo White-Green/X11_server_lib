@@ -111,7 +111,7 @@ fn main() {
                     if let Ok(Request::QueryExtension(req)) = reader.read_value(&order) {
                         println!("extension {} is requested", req.name);
                         writer.write_value(QueryExtensionResponse {
-                            sequence_number: 1,
+                            sequence_number: 4,
                             present: false,
                             major_opcode: 0,
                             first_event: 0,
@@ -152,6 +152,6 @@ fn main() {
         }
         println!("{}", hex);
         println!("{}", asc);
-        //TODO:次は 55:CreateDC,20:GetProperty
+        //TODO:次は 16:InternAtom
     }
 }
